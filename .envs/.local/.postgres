@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=gauntlet
+POSTGRES_USER=gMUWHFicUObhskLqOxTAzJugCMEwtnTl
+POSTGRES_PASSWORD=FDuRU2lQQhZZIa0WmHQom3Z7wSOUPHY0vcnMDXl00O5kwn6JTdrjikr4QHs5X0Gn
