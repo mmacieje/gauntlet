@@ -13,7 +13,11 @@
 
     {% block css %}
     <!-- Your stuff: Third-party CSS libraries go here -->
+        <!-- Bootstrap core CSS -->
+        <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
 
+        <!-- Custom styles for this template -->
+        <link href="{% static 'css/starter-template.css' %}" rel="stylesheet">
     <!-- This file stores project-specific CSS -->
     {% render_bundle 'project' 'css' %}
     {% endblock %}
@@ -31,7 +35,7 @@
 
   </head>
 
-  <body>
+  <body class="d-flex flex-column h-100">
 
     <div class="mb-1">
       <nav class="navbar navbar-expand-md navbar-light bg-light">
