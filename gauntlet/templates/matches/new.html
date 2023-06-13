@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <h2>New Match</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% crispy match_form %}
+        {{ rounds_formset.management_form|crispy }}
+        {% for form in rounds_formset %}
+        <div class="border border-secondary rounded p-3 my-3 col-md-6" id="div_outer_round_formset_{{ forloop.counter0 }}">
+            {% crispy form %}
+        </div>
+        {% endfor %}
+        <input type="submit" value="Submit" class="mb-3">
+    </form>
+
+    <script>
+        document.getElementById("id_match-round_count").addEventListener("change", roundsCallback);
+        function roundsCallback() {
+            var rounds = document.getElementById("id_match-round_count").value;
+            for (let i = 0; i < 5; i++) {
+                if ( i+1 <= rounds) {
+                    document.getElementById("id_rounds-" + i + "-winner").required = true;
+                    document.getElementById("id_rounds-" + i + "-score_loser").required = true;
+                    document.getElementById("div_outer_round_formset_" + i).style.display = "block";
+                }
+                else {
+                    document.getElementById("id_rounds-" + i + "-winner").required = false;
+                    document.getElementById("id_rounds-" + i + "-score_loser").required = false;
+                    document.getElementById("div_outer_round_formset_" + i).style.display = "none";
+                }
+            }
+        }
+    </script>
+{% endblock %}

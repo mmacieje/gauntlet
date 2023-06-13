@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="card-body table-responsive">
+        <table class="table table-hover" id="matches_list">
+        <thead="">
+        <tr>
+            <th scope="col">Match</th>
+            <th scope="col">Round</th>
+            <th scope="col">Winner</th>
+            <th scope="col">Loser</th>
+            <th scope="col">Winner score</th>
+            <th scope="col">Loser score</th>
+            <th scope="col">Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for match_round in match_rounds %}
+            <tr>
+                <td data-table-header="Match">{{ match_round.match.id }}</td>
+                <td data-table-header="Round">{{ match_round.round_number }}</td>
+                <td data-table-header="Winner">{% if not user.is_authenticated %}{{ match_round.winner|truncatechars:3 }}{%else%}{{ match_round.winner }}{%endif%}</td>
+                <td data-table-header="Loser">{% if not user.is_authenticated %}{{ match_round.loser|truncatechars:3 }}{%else%}{{ match_round.loser }}{%endif%}</td>
+                <td data-table-header="Winner score">{{ match_round.score_winner }}</td>
+                <td data-table-header="Loser score">{{ match_round.score_loser }}</td>
+                <td data-table-header="Date">{{ match_round.match.date }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+    $("#matches_list").DataTable({
+        autoWidth: true
+    });
+    });
+    </script>
+
+{% endblock %}

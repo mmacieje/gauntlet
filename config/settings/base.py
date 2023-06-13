@@ -84,6 +84,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "gauntlet.users",
+    "gauntlet.matches",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -267,7 +268,7 @@ ACCOUNT_USERNAME_REQUIRED = False
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "gauntlet.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/forms.html
