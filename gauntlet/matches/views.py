@@ -48,7 +48,7 @@ def new(request):
                     round = rounds_formset[i]
                     round.save(match, i + 1)
                 match.update()
-                return redirect("matches:match_rounds_list")
+                return redirect("matches:scores")
     else:
         match_form = MatchForm(prefix="match")
         rounds_formset = RoundFormset(prefix="rounds")
