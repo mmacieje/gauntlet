@@ -34,5 +34,22 @@
                 }
             }
         }
+
+        document.getElementById("id_match-player_1").addEventListener("change", playersCallback);
+        document.getElementById("id_match-player_2").addEventListener("change", playersCallback);
+        function playersCallback() {
+            var options = [];
+            for (let i = 0; i < 2; i++) {
+                var player = document.getElementById("id_match-player_" + (i+1))
+                if(player.selectedIndex > 0) {
+                    var value = player.value;
+                    var text = player.options[player.selectedIndex].text;
+                    options.push("<option value='" + value + "'>" + text + "</option>");
+                }
+            }
+            for (let i = 0; i < 5; i++) {
+                document.getElementById("id_rounds-" + i + "-winner").innerHTML = options.join();
+            }
+        }
     </script>
 {% endblock %}
