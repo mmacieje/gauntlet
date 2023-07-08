@@ -13,7 +13,7 @@ User = get_user_model()
 
 def rounds_list(request):
     match_rounds = MatchRound.objects.all().order_by("-pk")[:30]
-    return render(request, "matches/list_rounds.html", {"match_rounds": match_rounds})
+    return render(request, "matches/scores.html", {"match_rounds": match_rounds})
 
 
 class RoundFormSetHelper(FormHelper):
