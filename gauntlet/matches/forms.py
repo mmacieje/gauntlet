@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Match, MatchRound
+from .models import Match, Round
 
 User = get_user_model()
 
@@ -92,7 +92,7 @@ class RoundForm(forms.Form):
         loser = match.player_2 if winner == match.player_1 else match.player_1
         score_loser = data["score_loser"]
         score_winner = 11 if score_loser < 10 else score_loser + 2
-        round = MatchRound(
+        round = Round(
             round_number=round_number,
             loser=loser,
             winner=winner,

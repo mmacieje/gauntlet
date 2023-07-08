@@ -20,11 +20,11 @@ class Match(models.Model):
     def update(self):
         score_player_1 = 0
         score_player_2 = 0
-        for round in self.matchround_set.all():
+        for round in self.round_set.all():
             if self.player_1 == round.winner:
-                score_player_1 +=1
+                score_player_1 += 1
             elif self.player_2 == round.winner:
-                score_player_2 +=1
+                score_player_2 += 1
             else:
                 raise ValidationError("Got players not belonging to match")
         self.score_player_1 = score_player_1
@@ -37,7 +37,8 @@ class Match(models.Model):
             self.winner = None
         self.save()
 
-class MatchRound(models.Model):
+
+class Round(models.Model):
     round_number = models.PositiveSmallIntegerField()
     loser = models.ForeignKey(User, on_delete=models.CASCADE, related_name="round_loser")
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="round_winner")

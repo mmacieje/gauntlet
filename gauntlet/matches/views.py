@@ -6,13 +6,13 @@ from django.forms import formset_factory
 from django.shortcuts import redirect, render
 
 from .forms import MatchForm, RoundForm
-from .models import MatchRound
+from .models import Round
 
 User = get_user_model()
 
 
 def rounds_list(request):
-    match_rounds = MatchRound.objects.all().order_by("-pk")[:30]
+    match_rounds = Round.objects.all().order_by("-pk")[:30]
     return render(request, "matches/scores.html", {"match_rounds": match_rounds})
 
 
