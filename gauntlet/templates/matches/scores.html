@@ -6,25 +6,21 @@
         <table class="table table-hover" id="matches_list">
         <thead="">
         <tr>
-            <th scope="col">Match</th>
-            <th scope="col">Round</th>
-            <th scope="col">Winner</th>
-            <th scope="col">Loser</th>
-            <th scope="col">Winner score</th>
-            <th scope="col">Loser score</th>
+            <th scope="col">Pl 1</th>
+            <th scope="col">Pl 2</th>
+            <th scope="col">Pl 1 score</th>
+            <th scope="col">Pl 2 score</th>
             <th scope="col">Date</th>
         </tr>
         </thead>
         <tbody>
-        {% for match_round in match_rounds %}
+        {% for match in matches %}
             <tr>
-                <td data-table-header="Match">{{ match_round.match.id }}</td>
-                <td data-table-header="Round">{{ match_round.round_number }}</td>
-                <td data-table-header="Winner">{% if not user.is_authenticated %}{{ match_round.winner|truncatechars:3 }}{%else%}{{ match_round.winner }}{%endif%}</td>
-                <td data-table-header="Loser">{% if not user.is_authenticated %}{{ match_round.loser|truncatechars:3 }}{%else%}{{ match_round.loser }}{%endif%}</td>
-                <td data-table-header="Winner score">{{ match_round.score_winner }}</td>
-                <td data-table-header="Loser score">{{ match_round.score_loser }}</td>
-                <td data-table-header="Date">{{ match_round.match.date }}</td>
+                <td data-table-header="Pl 1">{{ match.player_1 }}</td>
+                <td data-table-header="Pl 2">{{ match.player_2 }}</td>
+                <td data-table-header="Pl 1 score">{{ match.score_player_1 }}</td>
+                <td data-table-header="Pl 2 score">{{ match.score_player_2 }}</td>
+                <td data-table-header="Date">{{ match.date }}</td>
             </tr>
         {% endfor %}
         </tbody>

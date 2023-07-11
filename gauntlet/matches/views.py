@@ -2,18 +2,19 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.forms import formset_factory
 from django.shortcuts import redirect, render
 
 from .forms import MatchForm, RoundForm
-from .models import Round
+from .models import Match
 
 User = get_user_model()
 
 
 def rounds_list(request):
-    match_rounds = Round.objects.all().order_by("-pk")[:30]
-    return render(request, "matches/scores.html", {"match_rounds": match_rounds})
+    matches = Match.objects.all().order_by("-pk")[:30]
+    return render(request, "matches/scores.html", {"matches": matches})
 
 
 class RoundFormSetHelper(FormHelper):
@@ -33,7 +34,6 @@ def new(request):
     if request.method == "POST":
         match_form = MatchForm(request.POST, request.FILES, prefix="match")
         rounds_formset = RoundFormset(request.POST, request.FILES, prefix="rounds")
-        # TODO check for different sets of players between rounds
 
         if match_form.is_valid():
             rounds_valid = True
@@ -43,11 +43,25 @@ def new(request):
                     rounds_valid = False
                     break
             if rounds_valid:
-                match = match_form.save()
+                match = match_form.clean()
+                round_scores = []
+                score_player_1 = 0
+                score_player_2 = 0
                 for i in range(match_form.clean()["round_count"]):
-                    round = rounds_formset[i]
-                    round.save(match, i + 1)
-                match.update()
+                    data = rounds_formset[i].clean()
+                    winner = data["winner"]
+                    if match["player_1"] != winner and match["player_2"] != winner:
+                        raise ValidationError("Player not in match")
+                    score_loser = data["score_loser"]
+                    score_winner = 11 if score_loser < 10 else score_loser + 2
+                    if winner == match["player_1"]:
+                        score_player_1 += 1
+                        round_score = [score_winner, score_loser]
+                    else:
+                        score_player_2 += 1
+                        round_score = [score_loser, score_winner]
+                    round_scores.append(round_score)
+                match_form.save(score_player_1, score_player_2, round_scores)
                 return redirect("matches:scores")
     else:
         match_form = MatchForm(prefix="match")

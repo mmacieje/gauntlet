@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Match, Round
+from .models import Match
 
 User = get_user_model()
 
@@ -56,11 +56,14 @@ class MatchForm(forms.Form):
 
         return cleaned_data
 
-    def save(self):
-        data = super().clean()
+    def save(self, score_player_1, score_player_2, round_scores):
+        data = self.clean()
         match = Match(
             player_1=data["player_1"],
             player_2=data["player_2"],
+            score_player_1=score_player_1,
+            score_player_2=score_player_2,
+            round_scores=round_scores,
             date=data["date"],
         )
         match.save()
@@ -83,22 +86,3 @@ class RoundForm(forms.Form):
         self.helper.form_class = "form-horizontal"
         self.helper.label_class = "col-md-3"
         self.helper.field_class = "col-md-3"
-
-    def save(self, match, round_number):
-        data = super().clean()
-        winner = data["winner"]
-        if match.player_1 != winner and match.player_2 != winner:
-            raise ValidationError("Player not in match")
-        loser = match.player_2 if winner == match.player_1 else match.player_1
-        score_loser = data["score_loser"]
-        score_winner = 11 if score_loser < 10 else score_loser + 2
-        round = Round(
-            round_number=round_number,
-            loser=loser,
-            winner=winner,
-            score_loser=score_loser,
-            score_winner=score_winner,
-            match=match,
-        )
-        round.save()
-        return round
