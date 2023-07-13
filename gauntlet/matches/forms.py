@@ -58,14 +58,24 @@ class MatchForm(forms.Form):
 
     def save(self, score_player_1, score_player_2, round_scores):
         data = self.clean()
-        match = Match(
-            player_1=data["player_1"],
-            player_2=data["player_2"],
-            score_player_1=score_player_1,
-            score_player_2=score_player_2,
-            round_scores=round_scores,
-            date=data["date"],
-        )
+        if data["player_1"].email < data["player_2"].email:
+            match = Match(
+                player_1=data["player_1"],
+                player_2=data["player_2"],
+                score_player_1=score_player_1,
+                score_player_2=score_player_2,
+                round_scores=round_scores,
+                date=data["date"],
+            )
+        else:
+            match = Match(
+                player_1=data["player_2"],
+                player_2=data["player_1"],
+                score_player_1=score_player_2,
+                score_player_2=score_player_1,
+                round_scores=[list(reversed(r)) for r in round_scores],
+                date=data["date"],
+            )
         match.save()
         return match
 
