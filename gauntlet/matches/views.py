@@ -3,6 +3,7 @@ from crispy_forms.layout import Submit
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms import formset_factory
 from django.shortcuts import redirect, render
 
@@ -13,7 +14,7 @@ User = get_user_model()
 
 
 def rounds_list(request):
-    matches = Match.objects.all().order_by("-pk")[:30]
+    matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-pk")[:30]
     matches_data = []
     for match in matches:
         scores = [
