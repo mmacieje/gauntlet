@@ -13,7 +13,8 @@ from .models import Match
 User = get_user_model()
 
 
-def rounds_list(request):
+@login_required
+def scores(request):
     matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-pk")[:30]
     matches_data = []
     for match in matches:

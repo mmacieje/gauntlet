@@ -6,10 +6,10 @@ from django.views import defaults as default_views
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
-from gauntlet.matches.views import rounds_list
+from gauntlet.matches.views import scores
 
 urlpatterns = [
-    path("", rounds_list, name="home"),
+    path("", scores, name="home"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
