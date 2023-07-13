@@ -2,37 +2,37 @@
 
 {% block content %}
 
-    <div class="card-body table-responsive">
-        <table class="table table-hover" id="matches_list">
+{% for match in matches %}
+    <div class="card my-2">
+        <div class="card-body">
+        <table class="table" id="matches_list">
         <thead="">
         <tr>
-            <th scope="col">Pl 1</th>
-            <th scope="col">Pl 2</th>
-            <th scope="col">Pl 1 score</th>
-            <th scope="col">Pl 2 score</th>
-            <th scope="col">Date</th>
+            <th class="col-3">{{ match.date }}</th>
+            <th class="col-3">{{ match.player_1 }}</th>
+            <th class="col-3">{{ match.player_2 }}</th>
         </tr>
         </thead>
         <tbody>
-        {% for match in matches %}
+            {% for score in match.scores %}
             <tr>
-                <td data-table-header="Pl 1">{{ match.player_1 }}</td>
-                <td data-table-header="Pl 2">{{ match.player_2 }}</td>
-                <td data-table-header="Pl 1 score">{{ match.score_player_1 }}</td>
-                <td data-table-header="Pl 2 score">{{ match.score_player_2 }}</td>
-                <td data-table-header="Date">{{ match.date }}</td>
+                <td class="col-3">{{ score.0 }}</td>
+                <td class="col-3">{{ score.1 }}</td>
+                <td class="col-3">{{ score.2 }}</td>
             </tr>
-        {% endfor %}
+            {% endfor %}
         </tbody>
         </table>
     </div>
+</div>
+{% endfor %}
 
-    <script>
+    <!-- <script>
     $(document).ready(function() {
     $("#matches_list").DataTable({
         autoWidth: true
     });
     });
-    </script>
+    </script> -->
 
 {% endblock %}
