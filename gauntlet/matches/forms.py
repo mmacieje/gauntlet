@@ -38,6 +38,7 @@ class MatchForm(forms.Form):
             Field("player_2", required=True),
             Field("round_count", required=True),
         )
+        self.initial["round_count"] = 5
 
     def clean(self):
         errors = []
