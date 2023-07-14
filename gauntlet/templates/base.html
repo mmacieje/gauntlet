@@ -9,7 +9,7 @@
     <meta name="description" content="A platform for organising social sports events and tracking one's results.">
     <meta name="author" content="Marcin Maciejewski">
 
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+    <link rel="icon" href="{% static 'images/favicons/glove_favicon.png' %}">
 
     {% block css %}
     <!-- Your stuff: Third-party CSS libraries go here -->
@@ -43,7 +43,7 @@
           <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
-          <a class="navbar-brand" href="{% url 'home' %}">Gauntlet</a>
+          <a href="{% url 'home' %}"><img alt="Home" src={% static 'images/icons8-hockey-glove-50.png' %}></a>
 
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
