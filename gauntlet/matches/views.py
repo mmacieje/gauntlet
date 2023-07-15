@@ -16,25 +16,7 @@ User = get_user_model()
 @login_required
 def scores(request):
     matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-pk")[:30]
-    matches_data = []
-    for match in matches:
-        scores = [
-            ["Match", match.score_player_1, match.score_player_2],
-        ]
-        round_count = 0
-        for round_score in match.round_scores:
-            round_count += 1
-            print(round_score)
-            scores.append([str(round_count), round_score[0], round_score[1]])
-        match_data = {
-            "player_1": match.player_1.email.split("@")[0],
-            "player_2": match.player_2.email.split("@")[0],
-            "date": match.date,
-            "scores": scores,
-        }
-        matches_data.append(match_data)
-
-    return render(request, "matches/scores.html", {"matches": matches_data})
+    return render(request, "matches/scores.html", {"matches": matches})
 
 
 class RoundFormSetHelper(FormHelper):
