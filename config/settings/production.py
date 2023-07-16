@@ -126,3 +126,4 @@ SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa: F405
 ]
 # Your stuff...
 # ------------------------------------------------------------------------------
+WHITELISTED_EMAL_DOMAIN = env.list("GAUNTLET_WHITELISTED_EMAL_DOMAIN", default=None)
