@@ -95,5 +95,5 @@ class RoundForm(forms.Form):
             Field("score_loser", required=True),
         )
         self.helper.form_class = "form-horizontal"
-        self.helper.label_class = "col-md-3"
-        self.helper.field_class = "col-md-9"
+        self.helper.label_class = "col-3"
+        self.helper.field_class = "col-9"

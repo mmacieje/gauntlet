@@ -10,7 +10,7 @@
         {% crispy match_form %}
         {{ rounds_formset.management_form|crispy }}
         {% for form in rounds_formset %}
-        <div class="border border-secondary rounded p-3 my-3 col-md-6" id="div_outer_round_formset_{{ forloop.counter0 }}">
+        <div class="border border-secondary rounded p-3 my-3 col-lg-6 col-12" id="div_outer_round_formset_{{ forloop.counter0 }}">
             {% crispy form %}
         </div>
         {% endfor %}
