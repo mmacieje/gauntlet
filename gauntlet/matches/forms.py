@@ -83,6 +83,7 @@ class MatchForm(forms.Form):
 
 class RoundForm(forms.Form):
     winner = forms.ModelChoiceField(queryset=player_queryset, label="Winner")
+    score_winner = forms.IntegerField(min_value=0, max_value=100, label="Winner score")
     score_loser = forms.IntegerField(min_value=0, max_value=100, label="Loser score")
 
     def __init__(self, *args, **kwargs):
@@ -93,7 +94,10 @@ class RoundForm(forms.Form):
         self.helper.layout = Layout(
             Field("winner", required=True),
             Field("score_loser", required=True),
+            Field("score_winner", required=False, readonly=True),
         )
         self.helper.form_class = "form-horizontal"
         self.helper.label_class = "col-3"
         self.helper.field_class = "col-9"
+        self.initial["score_winner"] = 11
+        self.initial["score_loser"] = 0

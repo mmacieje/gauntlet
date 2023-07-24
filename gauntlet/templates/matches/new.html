@@ -51,5 +51,13 @@
                 document.getElementById("id_rounds-" + i + "-winner").innerHTML = options.join();
             }
         }
+        for (let i = 0; i < 5; i++) {
+            document.getElementById("id_rounds-" + i + "-score_loser").addEventListener("change", roundScoreCallback);
+        }
+        function roundScoreCallback(e) {
+            value = parseInt(e.target.value)
+            winner_elem = document.getElementById(e.target.id.replace("loser", "winner"))
+            winner_elem.value = value < 10 ? 11 : value + 2
+        }
     </script>
 {% endblock %}
