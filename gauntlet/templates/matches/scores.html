@@ -4,40 +4,42 @@
 
 <div class="card-deck">
 {% for matchset in matchsets %}
-    <h2>{{matchset.name}}</h2>
-    {% for match in matchset.matches %}
-        <div class="card my-2 row col-lg-4">
-            <div class="card-body">
-                <table class="table w-auto" id="matches_list">
-                <thead="">
-                <tr>
-                    <th class="col">{{ match.date }}</th>
-                    <th class="col">M</th>
-                    {% for score in match.round_scores %}
-                    <th class="col">R{{forloop.counter}}</th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
+    {% if matchset.matches.count > 0 %}
+        <h2>{{matchset.name}}</h2>
+        {% for match in matchset.matches %}
+            <div class="card my-2 row col-lg-4">
+                <div class="card-body">
+                    <table class="table w-auto" id="matches_list">
+                    <thead="">
                     <tr>
-                        <td class="col">{{ match.player_1 }}</th>
-                        <td class="col">{{ match.score_player_1 }}</td>
-                    {% for score in match.round_scores %}
-                        <td class="col">{{ score.0 }}</td>
-                    {% endfor %}
+                        <th class="col">{{ match.date }}</th>
+                        <th class="col">M</th>
+                        {% for score in match.round_scores %}
+                        <th class="col">R{{forloop.counter}}</th>
+                        {% endfor %}
                     </tr>
-                    <tr>
-                        <td class="col">{{ match.player_2 }}</th>
-                        <td class="col">{{ match.score_player_2 }}</td>
-                    {% for score in match.round_scores %}
-                        <td class="col">{{ score.1 }}</td>
-                    {% endfor %}
-                    </tr>
-                </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="col">{{ match.player_1 }}</th>
+                            <td class="col">{{ match.score_player_1 }}</td>
+                        {% for score in match.round_scores %}
+                            <td class="col">{{ score.0 }}</td>
+                        {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="col">{{ match.player_2 }}</th>
+                            <td class="col">{{ match.score_player_2 }}</td>
+                        {% for score in match.round_scores %}
+                            <td class="col">{{ score.1 }}</td>
+                        {% endfor %}
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
 {% endfor %}
 </div>
 {% endblock %}
