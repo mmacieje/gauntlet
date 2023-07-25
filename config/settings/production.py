@@ -119,4 +119,4 @@ LOGGING = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-WHITELISTED_EMAL_DOMAIN = env.list("GAUNTLET_WHITELISTED_EMAL_DOMAIN", default=None)
+WHITELISTED_EMAL_DOMAIN = env.str("GAUNTLET_WHITELISTED_EMAL_DOMAIN", default=None)
