@@ -47,7 +47,6 @@ class MatchForm(forms.Form):
 
         if round_count < 1 or round_count > 5:
             errors.append("Rounds must be between 1 and 5")
-            raise ValidationError(errors)
 
         if cleaned_data["player_1"] == cleaned_data["player_2"]:
             errors.append("Same player on both sides")
@@ -101,3 +100,23 @@ class RoundForm(forms.Form):
         self.helper.field_class = "col-9"
         self.initial["score_winner"] = 11
         self.initial["score_loser"] = 0
+
+    def clean(self):
+        errors = []
+        cleaned_data = super().clean()
+        score_loser = cleaned_data.get("score_loser")
+        score_winner = cleaned_data.get("score_winner")
+
+        if score_loser < 0 or score_winner < 0:
+            errors.append("Scores cannot bo lower than 0")
+
+        if score_loser > (score_winner - 2):
+            errors.append("Winner must score at least 2 points more than the loser")
+
+        if score_winner < 11:
+            errors.append("The winner must score at least 11 points")
+
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_data
