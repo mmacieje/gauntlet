@@ -11,7 +11,7 @@ User = get_user_model()
 
 player_queryset = User.objects.order_by("email")
 
-MAX_ROUNDS_PER_MATCH = 5
+MAX_ROUNDS_PER_MATCH = 10
 MIN_ROUND_SCORE = 11
 
 

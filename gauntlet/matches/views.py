@@ -30,7 +30,7 @@ class RoundFormSetHelper(FormHelper):
         self.add_input(Submit("submit", "Submit"))
 
 
-MAX_ROUNDS_PER_MATCH = 5
+MAX_ROUNDS_PER_MATCH = 10
 
 
 @login_required
