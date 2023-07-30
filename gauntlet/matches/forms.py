@@ -47,6 +47,9 @@ class MatchForm(forms.Form):
         cleaned_data = super().clean()
         round_count = cleaned_data.get("round_count")
 
+        if cleaned_data.get("date") > timezone.now().date():
+            errors.append("You cannot add a match played in the future")
+
         if round_count < 1 or round_count > MAX_ROUNDS_PER_MATCH:
             errors.append(f"Rounds must be between 1 and {MAX_ROUNDS_PER_MATCH}")
 
