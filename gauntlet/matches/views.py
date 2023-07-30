@@ -82,7 +82,7 @@ def new(request):
                 match_form.save(score_player_1, score_player_2, round_scores)
                 return shortcuts.redirect("matches:scores")
     else:
-        match_form = MatchForm(prefix="match")
-        rounds_formset = RoundFormset(prefix="rounds")
+        match_form = MatchForm(prefix="match", user=request.user)
+        rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
 
     return render(request, match_form, rounds_formset)

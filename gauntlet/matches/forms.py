@@ -22,6 +22,7 @@ class MatchForm(forms.Form):
     player_2 = forms.ModelChoiceField(queryset=player_queryset, label="Player 2")
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -38,6 +39,8 @@ class MatchForm(forms.Form):
             Field("round_count", required=True),
         )
         self.initial["round_count"] = MAX_ROUNDS_PER_MATCH
+        if user:
+            self.initial["player_1"] = user
 
     def clean(self):
         errors = []
@@ -85,6 +88,7 @@ class RoundForm(forms.Form):
     score_loser = forms.IntegerField(min_value=0, max_value=100, label="Loser score")
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -99,6 +103,8 @@ class RoundForm(forms.Form):
         self.helper.field_class = "col-9"
         self.initial["score_winner"] = MIN_ROUND_SCORE
         self.initial["score_loser"] = 0
+        if user:
+            self.initial["winner"] = user
 
     def clean(self):
         errors = []
