@@ -14,8 +14,12 @@ User = get_user_model()
 
 @login_required
 def scores(request):
-    others_matches = Match.objects.filter(~Q(player_1=request.user) & ~Q(player_2=request.user)).order_by("-pk")[:3]
-    own_matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-pk")[:30]
+    others_matches = Match.objects.filter(~Q(player_1=request.user) & ~Q(player_2=request.user)).order_by(
+        "-date", "-pk"
+    )[:3]
+    own_matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-date", "-pk")[
+        :30
+    ]
     matchsets = []
     matchsets.append({"name": "Last matches", "matches": others_matches})
     matchsets.append({"name": "Your matches", "matches": own_matches})
