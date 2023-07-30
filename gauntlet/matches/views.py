@@ -42,14 +42,14 @@ def new(request):
         rounds_formset = RoundFormset(request.POST, request.FILES, prefix="rounds")
 
         if match_form.is_valid():
+            match = match_form.clean()
             rounds_valid = True
-            for i in range(match_form.clean()["round_count"]):
+            for i in range(match["round_count"]):
                 round = rounds_formset[i]
                 if not round.is_valid():
                     rounds_valid = False
                     break
             if rounds_valid:
-                match = match_form.clean()
                 round_scores = []
                 score_player_1 = 0
                 score_player_2 = 0
