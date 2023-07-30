@@ -49,7 +49,11 @@ def new(request):
 
         if match_form.is_valid():
             match = match_form.clean()
-            if match["player_1"] != request.user and match["player_2"] != request.user:
+            if (
+                match["player_1"] != request.user
+                and match["player_2"] != request.user
+                and not request.user.is_superuser
+            ):
                 match_form.add_error(None, "You can only register matches you played in yourself")
                 return render(request, match_form, rounds_formset)
             rounds_valid = True
