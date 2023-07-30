@@ -11,14 +11,13 @@ User = get_user_model()
 
 player_queryset = User.objects.order_by("email")
 
-MAX_ROUNDS_COUNT = 5
-MAX_NORMAL_SCORE = 11
-MIN_MATCH_SCORE = 11
+MAX_ROUNDS_PER_MATCH = 5
+MIN_ROUND_SCORE = 11
 
 
 class MatchForm(forms.Form):
     date = forms.DateField(initial=timezone.now)
-    round_count = forms.IntegerField(min_value=1, max_value=MAX_ROUNDS_COUNT)
+    round_count = forms.IntegerField(min_value=1, max_value=MAX_ROUNDS_PER_MATCH)
     player_1 = forms.ModelChoiceField(queryset=player_queryset, label="Player 1")
     player_2 = forms.ModelChoiceField(queryset=player_queryset, label="Player 2")
 
@@ -38,15 +37,15 @@ class MatchForm(forms.Form):
             Field("player_2", required=True),
             Field("round_count", required=True),
         )
-        self.initial["round_count"] = 5
+        self.initial["round_count"] = MAX_ROUNDS_PER_MATCH
 
     def clean(self):
         errors = []
         cleaned_data = super().clean()
         round_count = cleaned_data.get("round_count")
 
-        if round_count < 1 or round_count > 5:
-            errors.append("Rounds must be between 1 and 5")
+        if round_count < 1 or round_count > MAX_ROUNDS_PER_MATCH:
+            errors.append(f"Rounds must be between 1 and {MAX_ROUNDS_PER_MATCH}")
 
         if cleaned_data["player_1"] == cleaned_data["player_2"]:
             errors.append("Same player on both sides")
@@ -98,7 +97,7 @@ class RoundForm(forms.Form):
         self.helper.form_class = "form-horizontal"
         self.helper.label_class = "col-3"
         self.helper.field_class = "col-9"
-        self.initial["score_winner"] = 11
+        self.initial["score_winner"] = MIN_ROUND_SCORE
         self.initial["score_loser"] = 0
 
     def clean(self):
@@ -113,8 +112,8 @@ class RoundForm(forms.Form):
         if score_loser > (score_winner - 2):
             errors.append("Winner must score at least 2 points more than the loser")
 
-        if score_winner < 11:
-            errors.append("The winner must score at least 11 points")
+        if score_winner < MIN_ROUND_SCORE:
+            errors.append(f"The winner must score at least {MIN_ROUND_SCORE} points")
 
         if errors:
             raise ValidationError(errors)

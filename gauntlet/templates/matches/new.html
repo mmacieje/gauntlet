@@ -18,10 +18,12 @@
     </form>
 
     <script>
+        const MAX_ROUNDS_PER_MATCH = 5;
+
         document.getElementById("id_match-round_count").addEventListener("change", roundsCallback);
         function roundsCallback() {
             var rounds = document.getElementById("id_match-round_count").value;
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
                 if ( i+1 <= rounds) {
                     document.getElementById("id_rounds-" + i + "-winner").required = true;
                     document.getElementById("id_rounds-" + i + "-score_loser").required = true;
@@ -47,11 +49,11 @@
                     options.push("<option value='" + value + "'>" + text + "</option>");
                 }
             }
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
                 document.getElementById("id_rounds-" + i + "-winner").innerHTML = options.join();
             }
         }
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
             document.getElementById("id_rounds-" + i + "-score_loser").addEventListener("change", roundScoreCallback);
         }
         function roundScoreCallback(e) {

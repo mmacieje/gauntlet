@@ -30,7 +30,7 @@ class RoundFormSetHelper(FormHelper):
         self.add_input(Submit("submit", "Submit"))
 
 
-MAX_SETS_PER_MATCH = 5
+MAX_ROUNDS_PER_MATCH = 5
 
 
 @login_required
@@ -42,7 +42,7 @@ def new(request):
             {"match_form": match_form, "rounds_formset": rounds_formset},
         )
 
-    RoundFormset = formset_factory(RoundForm, extra=MAX_SETS_PER_MATCH)
+    RoundFormset = formset_factory(RoundForm, extra=MAX_ROUNDS_PER_MATCH)
     if request.method == "POST":
         match_form = MatchForm(request.POST, request.FILES, prefix="match")
         rounds_formset = RoundFormset(request.POST, request.FILES, prefix="rounds")
