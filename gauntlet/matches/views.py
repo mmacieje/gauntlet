@@ -72,11 +72,7 @@ def new(request):
                 score_player_2 = 0
                 for i in range(match_form.clean()["round_count"]):
                     data = rounds_formset[i].clean()
-                    winner = data["winner"]
-                    if match["player_1"] != winner and match["player_2"] != winner:
-                        match_form.add_error(None, "The winner is not a player on the match")
-                        return render(request, match_form, rounds_formset)
-                    if winner == match["player_1"]:
+                    if data["player_1_is_the_winner"] == 1:
                         score_player_1 += 1
                         round_score = [data["score_winner"], data["score_loser"]]
                     else:

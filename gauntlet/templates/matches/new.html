@@ -11,6 +11,14 @@
         {{ rounds_formset.management_form|crispy }}
         {% for form in rounds_formset %}
         <div class="border border-secondary rounded p-3 my-3 col-lg-6 col-12" id="div_outer_round_formset_{{ forloop.counter0 }}">
+            <div id="div_id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button" class="mb-3 row">
+                <label for="id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button" class="col-form-label col-3">
+                    Winner
+                </label>
+                <div class="col-9">
+                    <button type="button" class="btn w-100 active text-start" aria-pressed="true" id="id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button">---------</button>
+                </div>
+            </div>
             {% crispy form %}
         </div>
         {% endfor %}
@@ -25,12 +33,10 @@
             var rounds = document.getElementById("id_match-round_count").value;
             for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
                 if ( i+1 <= rounds) {
-                    document.getElementById("id_rounds-" + i + "-winner").required = true;
                     document.getElementById("id_rounds-" + i + "-score_loser").required = true;
                     document.getElementById("div_outer_round_formset_" + i).style.display = "block";
                 }
                 else {
-                    document.getElementById("id_rounds-" + i + "-winner").required = false;
                     document.getElementById("id_rounds-" + i + "-score_loser").required = false;
                     document.getElementById("div_outer_round_formset_" + i).style.display = "none";
                 }
@@ -49,9 +55,7 @@
                     options.push("<option value='" + value + "'>" + text + "</option>");
                 }
             }
-            for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
-                document.getElementById("id_rounds-" + i + "-winner").innerHTML = options.join();
-            }
+            updateWinnerButtonsLabels()
         }
         for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
             document.getElementById("id_rounds-" + i + "-score_loser").addEventListener("change", roundScoreCallback);
@@ -61,5 +65,31 @@
             winner_elem = document.getElementById(e.target.id.replace("loser", "winner"))
             winner_elem.value = value < 10 ? 11 : value + 2
         }
+        for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
+            document.getElementById("id_rounds-" + i + "-player_1_is_the_winner_button").addEventListener("click", winnerButtonCallback);
+        }
+        function winnerButtonCallback(e) {
+            winner_elem = document.getElementById(e.target.id.replace("_button", ""))
+            winner_elem.value = winner_elem.value == 1 ? 2 : 1
+            updateWinnerButtonsLabels()
+        }
+        function updateWinnerButtonsLabels() {
+            player_1 = document.getElementById("id_match-player_1");
+            player_1_text = player_1.options[player_1.selectedIndex].text;
+            player_2 = document.getElementById("id_match-player_2");
+            player_2_text = player_2.options[player_2.selectedIndex].text;
+            for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
+                field = document.getElementById("id_rounds-" + i + "-player_1_is_the_winner");
+                button = document.getElementById("id_rounds-" + i + "-player_1_is_the_winner_button");
+                if(field.value == 1) {
+                    button.textContent=player_1_text
+                }
+                else {
+
+                    button.textContent=player_2_text
+                }
+            }
+        }
+        window.addEventListener("load",updateWinnerButtonsLabels);
     </script>
 {% endblock %}
