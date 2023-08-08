@@ -12,6 +12,7 @@ User = get_user_model()
 player_queryset = User.objects.order_by("email")
 
 MAX_ROUNDS_PER_MATCH = 10
+INITIAL_ROUNDS_PER_MATCH = 5
 MIN_ROUND_SCORE = 11
 
 
@@ -38,7 +39,7 @@ class MatchForm(forms.Form):
             Field("player_2", required=True),
             Field("round_count", required=True),
         )
-        self.initial["round_count"] = MAX_ROUNDS_PER_MATCH
+        self.initial["round_count"] = INITIAL_ROUNDS_PER_MATCH
         if user:
             self.initial["player_1"] = user
 
