@@ -88,17 +88,48 @@ def new(request):
     return render(request, match_form, rounds_formset)
 
 
+def calculate_results(matches, main_player):
+    match_count = len(matches)
+    if match_count == 0:
+        return None
+    results = {"match_count": match_count}
+
+    match_stats = {
+        "win_count": 0,
+        "loose_count": 0,
+        "draw_count": 0,
+    }
+    for match in matches:
+        if match.score_player_1 == match.score_player_2:
+            match_stats["draw_count"] += 1
+        elif (match.player_1 == main_player and match.score_player_1 > match.score_player_2) or (
+            match.player_2 == main_player and match.score_player_2 > match.score_player_1
+        ):
+            match_stats["win_count"] += 1
+        else:
+            match_stats["loose_count"] += 1
+    results["match_stats"] = match_stats
+
+    return results
+
+
 @login_required
 def stats(request):
+    results = None
     if request.method == "POST":
         stats_form = StatsFrom(request.POST, request.FILES)
         if stats_form.is_valid():
-            pass
+            matches = Match.objects.filter(
+                Q(player_1=request.user, player_2=stats_form.cleaned_data["opponent"])
+                | Q(player_1=stats_form.cleaned_data["opponent"], player_2=request.user)
+            )
+        results = calculate_results(matches, request.user)
+
     else:
         stats_form = StatsFrom()
 
     return shortcuts.render(
         request,
         "matches/stats.html",
-        {"stats_form": stats_form},
+        {"stats_form": stats_form, "results": results},
     )

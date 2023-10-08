@@ -6,4 +6,12 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <h2>Stats</h2>
     {% crispy stats_form %}
-{% endblock %}
+    {% if results %}
+    <div>Matches played: {{ results.match_count }}</div>
+    <div>Matches won: {{ results.match_stats.win_count }}</div>
+    <div>Matches lost: {{ results.match_stats.loose_count }}</div>
+    <div>Matches drawn: {{ results.match_stats.draw_count }}</div>
+    {% else %}
+    <div>No matches found</div>
+    {% endif %}
+    {% endblock %}
