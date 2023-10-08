@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
 
-from .forms import ChooseOpponentForm, MatchForm, RoundForm
+from .forms import MatchForm, RoundForm, StatsFrom
 from .models import Match
 
 User = get_user_model()
@@ -91,14 +91,14 @@ def new(request):
 @login_required
 def stats(request):
     if request.method == "POST":
-        choose_opponent_form = ChooseOpponentForm(request.POST, request.FILES)
-        if choose_opponent_form.is_valid():
+        stats_form = StatsFrom(request.POST, request.FILES)
+        if stats_form.is_valid():
             pass
     else:
-        choose_opponent_form = ChooseOpponentForm()
+        stats_form = StatsFrom()
 
     return shortcuts.render(
         request,
         "matches/stats.html",
-        {"choose_opponent_form": choose_opponent_form},
+        {"stats_form": stats_form},
     )
