@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Field, Layout
+from crispy_forms.layout import Column, Field, Layout, Row, Submit
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -132,3 +132,19 @@ class RoundForm(forms.Form):
             raise ValidationError(errors)
 
         return cleaned_data
+
+
+class ChooseOpponentForm(forms.Form):
+    opponent = forms.ModelChoiceField(queryset=player_queryset, label="Choose an opponent")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = "POST"
+        self.helper.form_class = "form-horizontal"
+        self.helper.label_class = "col-3"
+        self.helper.field_class = "col-6"
+        self.helper.submit_class = "col-3"
+        self.helper.layout = Layout(
+            Row(Column(Field("opponent", required=True)), Column(Submit("submit", "Submit", css_class="btn-primary"))),
+        )

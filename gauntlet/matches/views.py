@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
 
-from .forms import MatchForm, RoundForm
+from .forms import ChooseOpponentForm, MatchForm, RoundForm
 from .models import Match
 
 User = get_user_model()
@@ -86,3 +86,19 @@ def new(request):
         rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
 
     return render(request, match_form, rounds_formset)
+
+
+@login_required
+def stats(request):
+    if request.method == "POST":
+        choose_opponent_form = ChooseOpponentForm(request.POST, request.FILES)
+        if choose_opponent_form.is_valid():
+            pass
+    else:
+        choose_opponent_form = ChooseOpponentForm()
+
+    return shortcuts.render(
+        request,
+        "matches/stats.html",
+        {"choose_opponent_form": choose_opponent_form},
+    )
