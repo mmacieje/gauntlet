@@ -1,10 +1,13 @@
 import django.shortcuts as shortcuts
+import plotly.express as px
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
+from plotly.graph_objs import Bar
+from plotly.offline import plot
 
 from .forms import MatchForm, RoundForm, StatsFrom
 from .models import Match
@@ -99,6 +102,10 @@ def calculate_results(matches, main_player):
         "loose_count": 0,
         "draw_count": 0,
     }
+    set_count = 0
+    set_score_distribution = {}
+    for i in list(range(-11, -1)) + list(range(2, 12)):
+        set_score_distribution[int(i)] = 0
     for match in matches:
         if match.score_player_1 == match.score_player_2:
             match_stats["draw_count"] += 1
@@ -108,7 +115,27 @@ def calculate_results(matches, main_player):
             match_stats["win_count"] += 1
         else:
             match_stats["loose_count"] += 1
+        if match.round_scores is None:
+            continue
+        for round_score in match.round_scores:
+            if match.player_1 == main_player:
+                difference = round_score[0] - round_score[1]
+            else:
+                difference = round_score[1] - round_score[0]
+            set_score_distribution[int(difference)] += 1
+            set_count += 1
+    normalized_distribution_keys = []
+    normalized_distribution_vals = []
+    for key, value in set_score_distribution.items():
+        normalized_distribution_keys.append(key)
+        normalized_distribution_vals.append(value / set_count * 100)
     results["match_stats"] = match_stats
+    fig = Bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
+    fig = px.bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
+    fig.update_xaxes(range=[-11, 11])
+    fig.update_layout(xaxis=dict(tickmode="linear", tick0=-11, dtick=1))
+    results["set_score_distribution_plot_div"] = plot(fig, output_type="div", include_plotlyjs=False)
+    print(results["set_score_distribution_plot_div"])
 
     return results
 
