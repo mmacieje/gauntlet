@@ -36,6 +36,22 @@ class Tournament(models.Model):
     players = models.ManyToManyField(User, blank=True)
     state = models.SmallIntegerField(default=State.PLANNED.value)
 
+    def removePlayer(self, player):
+        if self.state != self.State.PLANNED.value:
+            raise Exception("This tournament is not in the planning phase")
+        if player not in self.players.all():
+            raise Exception("Player already not signed up for this tournament")
+        self.players.remove(player)
+        self.save()
+
+    def addPlayer(self, player):
+        if self.state != self.State.PLANNED.value:
+            raise Exception("This tournament is not in the planning phase")
+        if player not in self.players.all():
+            raise Exception("Player already signed up for this tournament")
+        self.players.add(player)
+        self.save()
+
     def start(self):
         if self.state != self.State.PLANNED.value:
             raise Exception("This tournament is not in the planning phase")
@@ -46,6 +62,15 @@ class Tournament(models.Model):
             PlannedMatch.objects.create(player_1=player_pair[0], player_2=player_pair[1], tournament=self)
         self.state = self.State.ONGOING.value
         self.save()
+
+    def isInPlanning(self):
+        return self.state == self.State.PLANNED.value
+
+    def isOngoing(self):
+        return self.state == self.State.ONGOING.value
+
+    def isFinished(self):
+        return self.state == self.State.FINISHED.value
 
 
 class PlannedMatch(models.Model):

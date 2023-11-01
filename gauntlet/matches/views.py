@@ -174,17 +174,22 @@ def tournaments(request):
 @login_required
 def tournament_details(request, id):
     tournament = shortcuts.get_object_or_404(Tournament, id=id)
+    if tournament.isInPlanning():
+        return shortcuts.redirect(planned_tournament_details, tournament="tournament")
+    raise Exception("Tournament is in an unhandled state")
+
+
+@login_required
+def planned_tournament_details(request, tournament):
     if request.method == "POST":
         if "withdraw" in request.POST and request.user in tournament.players.all():
-            tournament.players.remove(request.user)
-            tournament.save()
+            tournament.removePlayer(request.user)
         elif "sign_up" in request.POST and request.user not in tournament.players.all():
-            tournament.players.add(request.user)
-            tournament.save()
+            tournament.addPlayer(request.user)
         elif "start" in request.POST:
             tournament.start()
     return shortcuts.render(
         request,
-        "matches/tournament_details.html",
+        "matches/planned_tournament_details.html",
         {"tournament": tournament},
     )
