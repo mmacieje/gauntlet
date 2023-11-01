@@ -20,3 +20,8 @@ class Match(models.Model):
         s = f"Match: {self.player_1}/{self.player_2} "
         s += f"Score: {self.score_player_1}:{self.score_player_2}"
         return s
+
+
+class PlannedTournament(models.Model):
+    name = models.CharField(max_length=100)
+    players = models.ManyToManyField(User, blank=True)

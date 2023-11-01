@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {% if tournament %}
+        <h2>Details</h2>
+        <h4>{{tournament.name}}</h4>
+    {% else %}
+        <h2>No such tournament</h2>
+    {% endif %}
+    {% endblock %}
