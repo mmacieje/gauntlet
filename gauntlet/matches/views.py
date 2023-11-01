@@ -10,7 +10,7 @@ from plotly.graph_objs import Bar
 from plotly.offline import plot
 
 from .forms import MatchForm, RoundForm, StatsFrom
-from .models import Match, PlannedTournament
+from .models import Match, Tournament
 
 User = get_user_model()
 
@@ -167,16 +167,27 @@ def tournaments(request):
     return shortcuts.render(
         request,
         "matches/tournaments.html",
-        {"planned_tournaments": PlannedTournament.objects.all()},
+        {"tournaments": Tournament.objects.all()},
     )
 
 
 @login_required
 def tournament_details(request, id):
     try:
-        tournament = PlannedTournament.objects.get(id=id)
-    except PlannedTournament.DoesNotExist:
-        tournament = None
+        tournament = Tournament.objects.get(id=id)
+    except Tournament.DoesNotExist:
+        return shortcuts.render(
+            request,
+            "matches/tournament_details.html",
+            {"tournament": None},
+        )
+    if request.method == "POST":
+        if "withdraw" in request.POST and request.user in tournament.players.all():
+            tournament.players.remove(request.user)
+            tournament.save()
+        elif "sign_up" in request.POST and request.user not in tournament.players.all():
+            tournament.players.add(request.user)
+            tournament.save()
     return shortcuts.render(
         request,
         "matches/tournament_details.html",

@@ -6,8 +6,30 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     {% if tournament %}
-        <h2>Details</h2>
-        <h4>{{tournament.name}}</h4>
+    <div class="card my-2 row col-lg-6">
+        <div class="card-body">
+            <h4>{{tournament.name}}</h4>
+            {% if tournament.description %}
+                <p>{{tournament.description}}</p>
+            {% endif %}
+            <hr/>
+            <p>Number of signed up players: {{ tournament.players.count}}</p>
+            <hr/>
+            {% if user in tournament.players.all %}
+                <p>You are signed up for this event. Please wait until it has started.</p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="withdraw" value="Withdraw" />
+                </form>
+            {% else %}
+                <p>Sign up to play once the tournament has started.</p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="sign_up" value="Sign up" />
+                </form>
+            {% endif %}
+        </div>
+    </div>
     {% else %}
         <h2>No such tournament</h2>
     {% endif %}

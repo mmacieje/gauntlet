@@ -22,6 +22,7 @@ class Match(models.Model):
         return s
 
 
-class PlannedTournament(models.Model):
+class Tournament(models.Model):
     name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
     players = models.ManyToManyField(User, blank=True)
