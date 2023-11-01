@@ -181,6 +181,8 @@ def tournament_details(request, id):
         elif "sign_up" in request.POST and request.user not in tournament.players.all():
             tournament.players.add(request.user)
             tournament.save()
+        elif "start" in request.POST:
+            tournament.start()
     return shortcuts.render(
         request,
         "matches/tournament_details.html",

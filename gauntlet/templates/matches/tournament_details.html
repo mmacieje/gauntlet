@@ -27,6 +27,15 @@
                     <input type="submit" name="sign_up" value="Sign up" />
                 </form>
             {% endif %}
+
+            {% if user.is_superuser %}
+                <hr/>
+                <h2>Admin:</h2>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="start" value="Start the tournament" />
+                </form>
+            {% endif %}
         </div>
     </div>
     {% endblock %}
