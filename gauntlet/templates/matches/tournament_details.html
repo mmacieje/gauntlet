@@ -5,7 +5,6 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    {% if tournament %}
     <div class="card my-2 row col-lg-6">
         <div class="card-body">
             <h4>{{tournament.name}}</h4>
@@ -30,7 +29,4 @@
             {% endif %}
         </div>
     </div>
-    {% else %}
-        <h2>No such tournament</h2>
-    {% endif %}
     {% endblock %}

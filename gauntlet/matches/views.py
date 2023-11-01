@@ -173,14 +173,7 @@ def tournaments(request):
 
 @login_required
 def tournament_details(request, id):
-    try:
-        tournament = Tournament.objects.get(id=id)
-    except Tournament.DoesNotExist:
-        return shortcuts.render(
-            request,
-            "matches/tournament_details.html",
-            {"tournament": None},
-        )
+    tournament = shortcuts.get_object_or_404(Tournament, id=id)
     if request.method == "POST":
         if "withdraw" in request.POST and request.user in tournament.players.all():
             tournament.players.remove(request.user)
