@@ -4,7 +4,11 @@
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <h2>New Match</h2>
+    {% if planned %}
+    <h2>Tournament Match - {{ planned.tournament.name }}</h2>
+    {% else %}
+    <h2>New Match - Freeplay</h2>
+    {% endif %}
     <form method="post">
         {% csrf_token %}
         {% crispy match_form %}

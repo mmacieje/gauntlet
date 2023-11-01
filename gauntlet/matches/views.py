@@ -10,7 +10,7 @@ from plotly.graph_objs import Bar
 from plotly.offline import plot
 
 from .forms import MatchForm, RoundForm, StatsFrom
-from .models import Match
+from .models import Match, PlannedMatch, Tournament
 
 User = get_user_model()
 
@@ -42,12 +42,38 @@ MAX_ROUNDS_PER_MATCH = 10
 
 @login_required
 def new(request):
-    def render(request, match_form, rounds_formset):
+    return _new(request)
+
+
+@login_required
+def new_planned(request, id):
+    planned = shortcuts.get_object_or_404(PlannedMatch, id=id)
+    return _new(request, planned)
+
+
+@login_required
+def _new(request, planned=None):
+    def render(request, match_form, rounds_formset, planned):
         return shortcuts.render(
             request,
             "matches/new.html",
-            {"match_form": match_form, "rounds_formset": rounds_formset},
+            {"match_form": match_form, "rounds_formset": rounds_formset, "planned": planned},
         )
+
+    def processScores(match_form, rounds_formset):
+        round_scores = []
+        score_player_1 = 0
+        score_player_2 = 0
+        for i in range(match_form.clean()["round_count"]):
+            data = rounds_formset[i].clean()
+            if data["player_1_is_the_winner"] == 1:
+                score_player_1 += 1
+                round_score = [data["score_winner"], data["score_loser"]]
+            else:
+                score_player_2 += 1
+                round_score = [data["score_loser"], data["score_winner"]]
+            round_scores.append(round_score)
+        return {"round_scores": round_scores, "score_player_1": score_player_1, "score_player_2": score_player_2}
 
     RoundFormset = formset_factory(RoundForm, extra=MAX_ROUNDS_PER_MATCH)
     if request.method == "POST":
@@ -57,12 +83,17 @@ def new(request):
         if match_form.is_valid():
             match = match_form.clean()
             if (
-                match["player_1"] != request.user
+                planned is None
+                and match["player_1"] != request.user
                 and match["player_2"] != request.user
                 and not request.user.is_superuser
             ):
                 match_form.add_error(None, "You can only register matches you played in yourself")
-                return render(request, match_form, rounds_formset)
+                return render(request, match_form, rounds_formset, planned)
+            if planned is None and (match["player_1"] != planned.player_1 or match["player_2"] != planned.player_2):
+                # TODO this is ugly, hide the form fields on frontend
+                match_form.add_error(None, "Please don't change players on a planned match")
+                return render(request, match_form, rounds_formset, planned)
             rounds_valid = True
             for i in range(match["round_count"]):
                 round = rounds_formset[i]
@@ -70,25 +101,22 @@ def new(request):
                     rounds_valid = False
                     break
             if rounds_valid:
-                round_scores = []
-                score_player_1 = 0
-                score_player_2 = 0
-                for i in range(match_form.clean()["round_count"]):
-                    data = rounds_formset[i].clean()
-                    if data["player_1_is_the_winner"] == 1:
-                        score_player_1 += 1
-                        round_score = [data["score_winner"], data["score_loser"]]
-                    else:
-                        score_player_2 += 1
-                        round_score = [data["score_loser"], data["score_winner"]]
-                    round_scores.append(round_score)
-                match_form.save(score_player_1, score_player_2, round_scores)
-                return shortcuts.redirect("matches:scores")
+                scores = processScores(match_form, rounds_formset)
+                match = match_form.save(scores["score_player_1"], scores["score_player_2"], scores["round_scores"])
+                if planned is not None:
+                    planned.actual_match = match
+                    planned.save()
+                    return shortcuts.redirect("matches:tournament_details", id=planned.tournament.id)
+                else:
+                    return shortcuts.redirect("matches:scores")
     else:
-        match_form = MatchForm(prefix="match", user=request.user)
+        if planned is not None:
+            match_form = MatchForm(prefix="match", planned=planned)
+        else:
+            match_form = MatchForm(prefix="match", user=request.user)
         rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
 
-    return render(request, match_form, rounds_formset)
+    return render(request, match_form, rounds_formset, planned)
 
 
 def calculate_results(matches, main_player):
@@ -159,4 +187,52 @@ def stats(request):
         request,
         "matches/stats.html",
         {"stats_form": stats_form, "results": results},
+    )
+
+
+@login_required
+def tournaments(request):
+    return shortcuts.render(
+        request,
+        "matches/tournaments.html",
+        {"tournaments": Tournament.objects.all()},
+    )
+
+
+@login_required
+def tournament_details(request, id):
+    tournament = shortcuts.get_object_or_404(Tournament, id=id)
+    if tournament.isInPlanning():
+        return shortcuts.redirect(planned_tournament_details, tournament="tournament")
+    planned_matches = PlannedMatch.objects.filter(tournament=tournament)
+    matches = [
+        planned_match.actual_match
+        for planned_match in planned_matches
+        if planned_match is not None and planned_match.actual_match is not None
+    ]
+    user_upcoming_matches = [
+        planned_match
+        for planned_match in planned_matches
+        if (planned_match.player_1 == request.user or planned_match.player_2 == request.user)
+    ]
+    return shortcuts.render(
+        request,
+        "matches/tournament_details.html",
+        {"tournament": tournament, "matches": matches, "user_upcoming_matches": user_upcoming_matches},
+    )
+
+
+@login_required
+def planned_tournament_details(request, tournament):
+    if request.method == "POST":
+        if "withdraw" in request.POST and request.user in tournament.players.all():
+            tournament.removePlayer(request.user)
+        elif "sign_up" in request.POST and request.user not in tournament.players.all():
+            tournament.addPlayer(request.user)
+        elif "start" in request.POST:
+            tournament.start()
+    return shortcuts.render(
+        request,
+        "matches/planned_tournament_details.html",
+        {"tournament": tournament},
     )

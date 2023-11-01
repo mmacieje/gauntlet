@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <h2>Tournaments</h2>
+    {% for tournament in tournaments %}
+        <div class="card my-2 row col-lg-6">
+            <div class="card-body">
+                <h4>{{tournament.name}}</h4>
+                {% if tournament.description %}
+                    <p>{{tournament.description}}</p>
+                {% endif %}
+                <hr/>
+                <a href="{% url 'matches:tournament_details' id=tournament.id %}" class="btn btn-info" role="button">See details</a>
+            </div>
+        </div>
+    {% endfor %}
+    {% endblock %}

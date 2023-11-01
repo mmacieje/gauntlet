@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <div class="card my-2 row col-lg-6">
+        <div class="card-body">
+            <h4>{{tournament.name}}</h4>
+            {% if tournament.description %}
+                <p>{{tournament.description}}</p>
+            {% endif %}
+            <hr/>
+            <p>Number of signed up players: {{ tournament.players.count}}</p>
+            <hr/>
+            {% if user in tournament.players.all %}
+                <p>You are signed up for this event. Please wait until it has started.</p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="withdraw" value="Withdraw" />
+                </form>
+            {% else %}
+                <p>Sign up to play once the tournament has started.</p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="sign_up" value="Sign up" />
+                </form>
+            {% endif %}
+
+            {% if user.is_superuser %}
+                <hr/>
+                <h2>Admin:</h2>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="start" value="Start the tournament" />
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}

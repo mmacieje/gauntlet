@@ -24,6 +24,7 @@ class MatchForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
+        planned = kwargs.pop("planned", None)
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -40,7 +41,10 @@ class MatchForm(forms.Form):
             Field("round_count", required=True),
         )
         self.initial["round_count"] = INITIAL_ROUNDS_PER_MATCH
-        if user:
+        if planned:
+            self.initial["player_1"] = planned.player_1
+            self.initial["player_2"] = planned.player_2
+        elif user:
             self.initial["player_1"] = user
 
     def clean(self):
