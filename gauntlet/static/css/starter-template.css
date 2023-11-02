@@ -9,3 +9,8 @@ body {
 .asteriskField {
   display: none;
 }
+
+.vrt-header {
+  writing-mode: vertical-rl;
+  min-width: 50px; /* for firefox */
+}
