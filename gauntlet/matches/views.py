@@ -203,7 +203,7 @@ def tournaments(request):
 def tournament_details(request, id):
     tournament = shortcuts.get_object_or_404(Tournament, id=id)
     if tournament.isInPlanning():
-        return shortcuts.redirect(planned_tournament_details, tournament="tournament")
+        return planned_tournament_details(request, tournament)
     planned_matches = PlannedMatch.objects.filter(tournament=tournament)
     matches = [
         planned_match.actual_match
@@ -231,6 +231,7 @@ def planned_tournament_details(request, tournament):
             tournament.addPlayer(request.user)
         elif "start" in request.POST:
             tournament.start()
+            return tournament_details(request, tournament.id)
     return shortcuts.render(
         request,
         "matches/planned_tournament_details.html",

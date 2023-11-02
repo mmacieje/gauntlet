@@ -47,7 +47,7 @@ class Tournament(models.Model):
     def addPlayer(self, player):
         if self.state != self.State.PLANNED.value:
             raise Exception("This tournament is not in the planning phase")
-        if player not in self.players.all():
+        if player in self.players.all():
             raise Exception("Player already signed up for this tournament")
         self.players.add(player)
         self.save()
