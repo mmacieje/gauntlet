@@ -168,9 +168,13 @@ def calculate_results(matches, main_player):
     fig = Bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
     fig = px.bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
     fig.update_xaxes(range=[-11, 11])
-    fig.update_layout(xaxis=dict(tickmode="linear", tick0=-11, dtick=1))
+    fig.update_layout(
+        xaxis=dict(
+            tickmode="array", tickvals=[-11, -8, -6, -4, -2, 2, 4, 6, 8, 11], title="Point difference in a sigle set"
+        ),
+        yaxis=dict(title="Percentage in all games"),
+    )
     results["set_score_distribution_plot_div"] = plot(fig, output_type="div", include_plotlyjs=False)
-    print(results["set_score_distribution_plot_div"])
 
     return results
 
