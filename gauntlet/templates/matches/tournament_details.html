@@ -5,19 +5,14 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <div class="card my-2 row col-lg-6">
-        <div class="card-body">
-            <h4>{{tournament.name}}</h4>
-            {% if tournament.description %}
-                <p>{{tournament.description}}</p>
-            {% endif %}
-        </div>
-    </div>
+    <h1>{{tournament.name}}</h1>
+    <hr>
+    {% if tournament.description %}
+        <p>{{tournament.description}}</p>
+    {% endif %}
 
     {% if user_upcoming_matches %}
         <h2>Your upcoming matches</h2>
-        <div class="card my-2 row col-lg-6">
-            <div class="card-body">
                 <table class="table w-auto" id="matches_list">
                     <tbody>
                     {% for match in user_upcoming_matches %}
@@ -36,10 +31,20 @@
                     {% endfor %}
                     </tbody>
                 </table>
-            </div>
-        </div>
     {% endif %}
 
+    {% if leaderboard_html %}
+        <h2>Leaderboard:</h2>
+        {% autoescape off %}{{ leaderboard_html }}{% endautoescape %}
+    {% endif %}
+
+    {% if scoreboard_html %}
+    <h2>Scoreboard:</h2>
+        <div>
+            {% autoescape off %}{{ scoreboard_html }}{% endautoescape %}
+            <div>Legend: [row]:[colum]</div>
+        </div>
+    {% endif %}
     {% if matches %}
         <h2>Matches played:</h2>
         {% for match in matches %}

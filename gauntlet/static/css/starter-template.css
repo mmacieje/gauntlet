@@ -10,7 +10,7 @@ body {
   display: none;
 }
 
-.vrt-header {
+.vrt-header thead th {
   writing-mode: vertical-rl;
   min-width: 50px; /* for firefox */
 }

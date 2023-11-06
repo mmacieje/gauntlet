@@ -1,4 +1,5 @@
 import django.shortcuts as shortcuts
+import pandas as pd
 import plotly.express as px
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
@@ -6,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
+from django.http import Http404
 from plotly.graph_objs import Bar
 from plotly.offline import plot
 
@@ -48,6 +50,9 @@ def new(request):
 @login_required
 def new_planned(request, id):
     planned = shortcuts.get_object_or_404(PlannedMatch, id=id)
+    if planned.actual_match is not None:
+        # This planned match already has an outcome
+        raise Http404
     return _new(request, planned)
 
 
@@ -90,7 +95,9 @@ def _new(request, planned=None):
             ):
                 match_form.add_error(None, "You can only register matches you played in yourself")
                 return render(request, match_form, rounds_formset, planned)
-            if planned is None and (match["player_1"] != planned.player_1 or match["player_2"] != planned.player_2):
+            if planned is not None and (
+                match["player_1"] != planned.player_1 or match["player_2"] != planned.player_2
+            ):
                 # TODO this is ugly, hide the form fields on frontend
                 match_form.add_error(None, "Please don't change players on a planned match")
                 return render(request, match_form, rounds_formset, planned)
@@ -195,12 +202,16 @@ def tournaments(request):
     return shortcuts.render(
         request,
         "matches/tournaments.html",
-        {"tournaments": Tournament.objects.all()},
+        {"tournaments": Tournament.objects.order_by("-id")},
     )
 
 
 @login_required
 def tournament_details(request, id):
+    # TODO just set the name of the user to the email sans domain and get rid of this everywhere
+    def get_user_name(user):
+        return user.email.split("@")[0]
+
     tournament = shortcuts.get_object_or_404(Tournament, id=id)
     if tournament.isInPlanning():
         return planned_tournament_details(request, tournament)
@@ -213,12 +224,44 @@ def tournament_details(request, id):
     user_upcoming_matches = [
         planned_match
         for planned_match in planned_matches
-        if (planned_match.player_1 == request.user or planned_match.player_2 == request.user)
+        if (
+            (planned_match.player_1 == request.user or planned_match.player_2 == request.user)
+            and planned_match.actual_match is None
+        )
     ]
+
+    player_names = [get_user_name(user) for user in tournament.players.all()]
+    scoreboard_df = pd.DataFrame("-", player_names, player_names)
+    leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches"])
+    for match in matches:
+        name_1 = get_user_name(match.player_1)
+        name_2 = get_user_name(match.player_2)
+        score_1 = match.score_player_1
+        score_2 = match.score_player_2
+        scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
+        scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
+
+        leaderboard_df.at[name_1, "Matches"] += 1
+        leaderboard_df.at[name_2, "Matches"] += 1
+        if score_1 > score_2:
+            leaderboard_df.at[name_1, "Wins"] += 1
+        elif score_2 > score_1:
+            leaderboard_df.at[name_2, "Wins"] += 1
+    leaderboard_df.sort_values(by=["Wins", "Matches"], inplace=True, ascending=[False, True])
+    table_classes = "table table-striped table-bordered table-responsive"
+    table_classes_rotated_header = table_classes + " vrt-header"
+    scoreboard_html = scoreboard_df.to_html(classes=table_classes_rotated_header)
+    leaderboard_html = leaderboard_df.to_html(classes=table_classes)
     return shortcuts.render(
         request,
         "matches/tournament_details.html",
-        {"tournament": tournament, "matches": matches, "user_upcoming_matches": user_upcoming_matches},
+        {
+            "tournament": tournament,
+            "matches": matches,
+            "user_upcoming_matches": user_upcoming_matches,
+            "scoreboard_html": scoreboard_html,
+            "leaderboard_html": leaderboard_html,
+        },
     )
 
 
