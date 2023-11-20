@@ -9,7 +9,9 @@ from django.db.models import Q
 from django.forms import formset_factory
 from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.generic import ListView
+from django.views.generic.detail import SingleObjectMixin
 from plotly.graph_objs import Bar
 from plotly.offline import plot
 
@@ -115,7 +117,7 @@ def _new(request, planned=None):
                 if planned is not None:
                     planned.actual_match = match
                     planned.save()
-                    return shortcuts.redirect("matches:tournament_details", id=planned.tournament.id)
+                    return shortcuts.redirect("matches:tournament-detail", pk=planned.tournament.pk)
                 else:
                     return shortcuts.redirect("matches:scores")
     else:
@@ -209,83 +211,115 @@ class TournamentListView(ListView):
     template_name = "matches/tournaments.html"
 
 
-@login_required
-def tournament_details(request, id):
-    # TODO just set the name of the user to the email sans domain and get rid of this everywhere
-    def get_user_name(user):
-        return user.email.split("@")[0]
+@method_decorator(login_required, name="dispatch")
+class TournamentDetailView(SingleObjectMixin, View):
+    model = Tournament
 
-    tournament = shortcuts.get_object_or_404(Tournament, id=id)
-    if tournament.isInPlanning():
-        return planned_tournament_details(request, tournament)
-    planned_matches = PlannedMatch.objects.filter(tournament=tournament)
-    matches = [
-        planned_match.actual_match
-        for planned_match in planned_matches
-        if planned_match is not None and planned_match.actual_match is not None
-    ]
-    user_upcoming_matches = [
-        planned_match
-        for planned_match in planned_matches
-        if (
-            (planned_match.player_1 == request.user or planned_match.player_2 == request.user)
-            and planned_match.actual_match is None
+    def post(self, request, *args, **kwargs):
+        self.request = request
+        self.tournament = self.get_object()
+
+        if "withdraw" in request.POST and request.user in self.tournament.players.all():
+            self.tournament.removePlayer(request.user)
+        elif "sign_up" in request.POST and request.user not in self.tournament.players.all():
+            self.tournament.addPlayer(request.user)
+        elif "start" in request.POST:
+            self.tournament.start()
+
+        return self.details()
+
+    def get(self, request, *args, **kwargs):
+        self.request = request
+        self.tournament = self.get_object()
+
+        return self.details()
+
+    def details(self):
+        if self.tournament.isInPlanning():
+            return self.planned_tournament_details()
+        return self.ongoing_or_finished_details()
+
+    def planned_tournament_details(self):
+        return self.render_details()
+
+    def ongoing_or_finished_details(self):
+        planned_matches = PlannedMatch.objects.filter(tournament=self.tournament)
+
+        self.played_matches = [
+            planned_match.actual_match
+            for planned_match in planned_matches
+            if planned_match is not None and planned_match.actual_match is not None
+        ]
+
+        self.matches_planned_for_user = [
+            planned_match
+            for planned_match in planned_matches
+            if (planned_match.hasPlayer(self.request.user) and planned_match.actual_match is None)
+        ]
+
+        player_names = [self.get_user_name(user) for user in self.tournament.players.all()]
+        self.scoreboard_df = pd.DataFrame("-", player_names, player_names)
+        self.leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
+        for match in self.played_matches:
+            self.update_leaderboard(match)
+            self.update_scoreboard(match)
+        self.leaderboard_df.sort_values(
+            by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True]
         )
-    ]
 
-    player_names = [get_user_name(user) for user in tournament.players.all()]
-    scoreboard_df = pd.DataFrame("-", player_names, player_names)
-    leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
-    for match in matches:
-        name_1 = get_user_name(match.player_1)
-        name_2 = get_user_name(match.player_2)
+        return self.render_details()
+
+    def update_leaderboard(self, match):
+        name_1 = self.get_user_name(match.player_1)
+        name_2 = self.get_user_name(match.player_2)
         score_1 = match.score_player_1
         score_2 = match.score_player_2
-        scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
-        scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
 
-        leaderboard_df.at[name_1, "Matches"] += 1
-        leaderboard_df.at[name_2, "Matches"] += 1
+        self.leaderboard_df.at[name_1, "Matches"] += 1
+        self.leaderboard_df.at[name_2, "Matches"] += 1
         if score_1 > score_2:
-            leaderboard_df.at[name_1, "Wins"] += 1
+            self.leaderboard_df.at[name_1, "Wins"] += 1
         elif score_2 > score_1:
-            leaderboard_df.at[name_2, "Wins"] += 1
+            self.leaderboard_df.at[name_2, "Wins"] += 1
         for score in match.round_scores:
             if score[0] < score[1]:
-                leaderboard_df.at[name_1, "Sets lost"] += 1
+                self.leaderboard_df.at[name_1, "Sets lost"] += 1
             elif score[0] > score[1]:
-                leaderboard_df.at[name_2, "Sets lost"] += 1
+                self.leaderboard_df.at[name_2, "Sets lost"] += 1
 
-    leaderboard_df.sort_values(by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True])
-    table_classes = "table table-striped table-bordered table-responsive"
-    table_classes_rotated_header = table_classes + " vrt-header"
-    scoreboard_html = scoreboard_df.to_html(classes=table_classes_rotated_header)
-    leaderboard_html = leaderboard_df.to_html(classes=table_classes)
-    return shortcuts.render(
-        request,
-        "matches/tournament_details.html",
-        {
-            "tournament": tournament,
-            "matches": matches,
-            "user_upcoming_matches": user_upcoming_matches,
-            "scoreboard_html": scoreboard_html,
-            "leaderboard_html": leaderboard_html,
-        },
-    )
+    def update_scoreboard(self, match):
+        name_1 = self.get_user_name(match.player_1)
+        name_2 = self.get_user_name(match.player_2)
+        score_1 = match.score_player_1
+        score_2 = match.score_player_2
 
+        self.scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
+        self.scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
 
-@login_required
-def planned_tournament_details(request, tournament):
-    if request.method == "POST":
-        if "withdraw" in request.POST and request.user in tournament.players.all():
-            tournament.removePlayer(request.user)
-        elif "sign_up" in request.POST and request.user not in tournament.players.all():
-            tournament.addPlayer(request.user)
-        elif "start" in request.POST:
-            tournament.start()
-            return tournament_details(request, tournament.id)
-    return shortcuts.render(
-        request,
-        "matches/planned_tournament_details.html",
-        {"tournament": tournament},
-    )
+    def render_details(self):
+        if self.tournament.isInPlanning():
+            return shortcuts.render(
+                self.request,
+                "matches/planned_tournament_details.html",
+                {"tournament": self.tournament},
+            )
+
+        table_classes = "table table-striped table-bordered table-responsive"
+        table_classes_rotated_header = table_classes + " vrt-header"
+        scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
+        leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
+        return shortcuts.render(
+            self.request,
+            "matches/ongoing_or_finished_tournament_details.html",
+            {
+                "tournament": self.tournament,
+                "played_matches": self.played_matches,
+                "matches_planned_for_user": self.matches_planned_for_user,
+                "scoreboard_html": scoreboard_html,
+                "leaderboard_html": leaderboard_html,
+            },
+        )
+
+    # TODO just set the name of the user to the email sans domain and get rid of this helper
+    def get_user_name(self, user):
+        return user.email.split("@")[0]

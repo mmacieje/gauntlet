@@ -24,6 +24,9 @@ class Match(models.Model):
         s += f"Score: {self.score_player_1}:{self.score_player_2}"
         return s
 
+    def hasPlayer(self, user):
+        return self.player_1 == user or self.player_2 == user
+
 
 class Tournament(models.Model):
     class State(Enum):
@@ -85,3 +88,6 @@ class PlannedMatch(models.Model):
     def __str__(self):
         s = f"PlannedMatch: {self.player_1}/{self.player_2}"
         return s
+
+    def hasPlayer(self, user):
+        return self.player_1 == user or self.player_2 == user

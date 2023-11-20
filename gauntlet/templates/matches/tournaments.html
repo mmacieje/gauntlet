@@ -14,7 +14,7 @@
                     <p>{{tournament.description}}</p>
                 {% endif %}
                 <hr/>
-                <a href="{% url 'matches:tournament_details' id=tournament.id %}" class="btn btn-info" role="button">See details</a>
+                <a href="{% url 'matches:tournament-detail' pk=tournament.pk %}" class="btn btn-info" role="button">See details</a>
             </div>
         </div>
     {% endfor %}

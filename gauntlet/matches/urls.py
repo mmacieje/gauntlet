@@ -1,6 +1,6 @@
 from django.urls import path
 
-from gauntlet.matches.views import TournamentListView, new, new_planned, scores, stats, tournament_details
+from gauntlet.matches.views import TournamentDetailView, TournamentListView, new, new_planned, scores, stats
 
 app_name = "matches"
 
@@ -10,5 +10,5 @@ urlpatterns = [
     path("scores/", scores, name="scores"),
     path("stats/", stats, name="stats"),
     path("tournaments/", TournamentListView.as_view(), name="tournaments"),
-    path("tournaments/<int:id>/", tournament_details, name="tournament_details"),
+    path("tournaments/<int:pk>/", TournamentDetailView.as_view(), name="tournament-detail"),
 ]

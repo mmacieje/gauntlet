@@ -11,11 +11,11 @@
         <p>{{tournament.description}}</p>
     {% endif %}
 
-    {% if user_upcoming_matches %}
+    {% if matches_planned_for_user %}
         <h2>Your upcoming matches</h2>
                 <table class="table w-auto" id="matches_list">
                     <tbody>
-                    {% for match in user_upcoming_matches %}
+                    {% for match in matches_planned_for_user %}
                         <tr>
                             <td class="col">
                             {% if match.player_1 == user %}
@@ -45,9 +45,9 @@
             <div>Legend: [row]:[colum]</div>
         </div>
     {% endif %}
-    {% if matches %}
+    {% if played_matches %}
         <h2>Matches played:</h2>
-        {% for match in matches %}
+        {% for match in played_matches %}
             <div class="card my-2 row col-lg-6">
                 <div class="card-body">
                     <table class="table w-auto" id="matches_list">
