@@ -1,8 +1,6 @@
 import django.shortcuts as shortcuts
 import pandas as pd
 import plotly.express as px
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -20,6 +18,8 @@ from .models import Match, PlannedMatch, Tournament
 
 User = get_user_model()
 
+MAX_ROUNDS_PER_MATCH = 8
+
 
 @login_required
 def scores(request):
@@ -33,17 +33,6 @@ def scores(request):
     matchsets.append({"name": "Last matches", "matches": others_matches})
     matchsets.append({"name": "Your matches", "matches": own_matches})
     return shortcuts.render(request, "matches/scores.html", {"matchsets": matchsets})
-
-
-class RoundFormSetHelper(FormHelper):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.form_method = "post"
-        self.render_required_fields = True
-        self.add_input(Submit("submit", "Submit"))
-
-
-MAX_ROUNDS_PER_MATCH = 8
 
 
 @login_required
