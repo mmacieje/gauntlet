@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
 from django.http import Http404
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView
 from plotly.graph_objs import Bar
 from plotly.offline import plot
 
@@ -201,13 +203,10 @@ def stats(request):
     )
 
 
-@login_required
-def tournaments(request):
-    return shortcuts.render(
-        request,
-        "matches/tournaments.html",
-        {"tournaments": Tournament.objects.order_by("-id")},
-    )
+@method_decorator(login_required, name="dispatch")
+class TournamentListView(ListView):
+    queryset = Tournament.objects.order_by("-id")
+    template_name = "matches/tournaments.html"
 
 
 @login_required
