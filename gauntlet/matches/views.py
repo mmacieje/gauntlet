@@ -214,6 +214,7 @@ class TournamentListView(ListView):
 @method_decorator(login_required, name="dispatch")
 class TournamentDetailView(SingleObjectMixin, View):
     model = Tournament
+    template_name = "matches/tournament_details.html"
 
     def post(self, request, *args, **kwargs):
         self.request = request
@@ -300,7 +301,7 @@ class TournamentDetailView(SingleObjectMixin, View):
         if self.tournament.isInPlanning():
             return shortcuts.render(
                 self.request,
-                "matches/planned_tournament_details.html",
+                self.template_name,
                 {"tournament": self.tournament},
             )
 
@@ -308,9 +309,10 @@ class TournamentDetailView(SingleObjectMixin, View):
         table_classes_rotated_header = table_classes + " vrt-header"
         scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
         leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
+
         return shortcuts.render(
             self.request,
-            "matches/ongoing_or_finished_tournament_details.html",
+            self.template_name,
             {
                 "tournament": self.tournament,
                 "played_matches": self.played_matches,
