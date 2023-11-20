@@ -236,7 +236,7 @@ def tournament_details(request, id):
 
     player_names = [get_user_name(user) for user in tournament.players.all()]
     scoreboard_df = pd.DataFrame("-", player_names, player_names)
-    leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches"])
+    leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
     for match in matches:
         name_1 = get_user_name(match.player_1)
         name_2 = get_user_name(match.player_2)
@@ -251,7 +251,13 @@ def tournament_details(request, id):
             leaderboard_df.at[name_1, "Wins"] += 1
         elif score_2 > score_1:
             leaderboard_df.at[name_2, "Wins"] += 1
-    leaderboard_df.sort_values(by=["Wins", "Matches"], inplace=True, ascending=[False, True])
+        for score in match.round_scores:
+            if score[0] < score[1]:
+                leaderboard_df.at[name_1, "Sets lost"] += 1
+            elif score[0] > score[1]:
+                leaderboard_df.at[name_2, "Sets lost"] += 1
+
+    leaderboard_df.sort_values(by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True])
     table_classes = "table table-striped table-bordered table-responsive"
     table_classes_rotated_header = table_classes + " vrt-header"
     scoreboard_html = scoreboard_df.to_html(classes=table_classes_rotated_header)
