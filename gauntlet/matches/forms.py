@@ -138,7 +138,7 @@ class RoundForm(forms.Form):
         return cleaned_data
 
 
-class StatsFrom(forms.Form):
+class StatsForm(forms.Form):
     opponent = forms.ModelChoiceField(queryset=player_queryset, label="Choose an opponent")
 
     def __init__(self, *args, **kwargs):

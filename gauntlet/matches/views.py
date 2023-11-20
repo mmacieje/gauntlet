@@ -15,7 +15,7 @@ from django.views.generic.detail import SingleObjectMixin
 from plotly.graph_objs import Bar
 from plotly.offline import plot
 
-from .forms import MatchForm, RoundForm, StatsFrom
+from .forms import MatchForm, RoundForm, StatsForm
 from .models import Match, PlannedMatch, Tournament
 
 User = get_user_model()
@@ -187,7 +187,7 @@ def calculate_results(matches, main_player):
 def stats(request):
     results = None
     if request.method == "POST":
-        stats_form = StatsFrom(request.POST, request.FILES)
+        stats_form = StatsForm(request.POST, request.FILES)
         if stats_form.is_valid():
             matches = Match.objects.filter(
                 Q(player_1=request.user, player_2=stats_form.cleaned_data["opponent"])
@@ -196,7 +196,7 @@ def stats(request):
         results = calculate_results(matches, request.user)
 
     else:
-        stats_form = StatsFrom()
+        stats_form = StatsForm()
 
     return shortcuts.render(
         request,
