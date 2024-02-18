@@ -14,7 +14,7 @@ I love playing table tennis, and I mainly play it in the office with my colleagu
 - See your previous matches and some basic stats (how many times you won/lost vs a certain player, what was the point distribution in sets)
 - Organise a tournament and allow other players to sign up for it
 - Start the tournamnent which automatically schedules matches between the participants
-- The participants can enter scores for the planned matches, and see the progres (leaderboard, scoreboard)
+- The participants can enter scores for the planned matches, and see the progress (leaderboard, scoreboard)
 
 # Tech stack
 The app is written in Python with Django as the web framework. Frontend is created via Django Templates with Bootstrap and some JS sprinkled in. The app is Dockerized and uses Sendgrid to send out e-mail (e.g. to confirm user's e-mail account when signing up).
