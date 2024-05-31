@@ -206,34 +206,33 @@ class TournamentDetailView(SingleObjectMixin, View):
     template_name = "matches/tournament_details.html"
 
     def post(self, request, *args, **kwargs):
-        self.request = request
-        self.tournament = self.get_object()
+        tournament = self.get_object()
+        user_in_tournament = request.user in tournament.players.all()
 
-        if "withdraw" in request.POST and request.user in self.tournament.players.all():
-            self.tournament.removePlayer(request.user)
-        elif "sign_up" in request.POST and request.user not in self.tournament.players.all():
-            self.tournament.addPlayer(request.user)
-        elif "start" in request.POST:
-            self.tournament.start()
+        if "withdraw" in request.POST and user_in_tournament:
+            tournament.removePlayer(request.user)
+        elif "sign_up" in request.POST and not user_in_tournament:
+            tournament.addPlayer(request.user)
+        elif "start" in request.POST and request.user.is_superuser:
+            tournament.start()
 
-        return self.details()
+        return self.details(request)
 
     def get(self, request, *args, **kwargs):
-        self.request = request
-        self.tournament = self.get_object()
+        return self.details(request)
 
-        return self.details()
+    def details(self, request):
+        tournament = self.get_object()
+        if tournament.isInPlanning():
+            return self.planned_tournament_details(request)
+        return self.ongoing_or_finished_details(request)
 
-    def details(self):
-        if self.tournament.isInPlanning():
-            return self.planned_tournament_details()
-        return self.ongoing_or_finished_details()
+    def planned_tournament_details(self, request):
+        return self.render_details(request)
 
-    def planned_tournament_details(self):
-        return self.render_details()
-
-    def ongoing_or_finished_details(self):
-        planned_matches = PlannedMatch.objects.filter(tournament=self.tournament)
+    def ongoing_or_finished_details(self, request):
+        tournament = self.get_object()
+        planned_matches = PlannedMatch.objects.filter(tournament=tournament)
 
         self.played_matches = [
             planned_match.actual_match
@@ -244,10 +243,10 @@ class TournamentDetailView(SingleObjectMixin, View):
         self.matches_planned_for_user = [
             planned_match
             for planned_match in planned_matches
-            if (planned_match.hasPlayer(self.request.user) and planned_match.actual_match is None)
+            if (planned_match.hasPlayer(request.user) and planned_match.actual_match is None)
         ]
 
-        player_names = [self.get_user_name(user) for user in self.tournament.players.all()]
+        player_names = [self.get_user_name(user) for user in tournament.players.all()]
         self.scoreboard_df = pd.DataFrame("-", player_names, player_names)
         self.leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
         for match in self.played_matches:
@@ -257,7 +256,7 @@ class TournamentDetailView(SingleObjectMixin, View):
             by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True]
         )
 
-        return self.render_details()
+        return self.render_details(request)
 
     def update_leaderboard(self, match):
         name_1 = self.get_user_name(match.player_1)
@@ -286,12 +285,13 @@ class TournamentDetailView(SingleObjectMixin, View):
         self.scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
         self.scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
 
-    def render_details(self):
-        if self.tournament.isInPlanning():
+    def render_details(self, request):
+        tournament = self.get_object()
+        if tournament.isInPlanning():
             return shortcuts.render(
-                self.request,
+                request,
                 self.template_name,
-                {"tournament": self.tournament},
+                {"tournament": tournament},
             )
 
         table_classes = "table table-striped table-bordered table-responsive"
@@ -300,10 +300,10 @@ class TournamentDetailView(SingleObjectMixin, View):
         leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
 
         return shortcuts.render(
-            self.request,
+            request,
             self.template_name,
             {
-                "tournament": self.tournament,
+                "tournament": tournament,
                 "played_matches": self.played_matches,
                 "matches_planned_for_user": self.matches_planned_for_user,
                 "scoreboard_html": scoreboard_html,
