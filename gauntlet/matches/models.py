@@ -39,9 +39,6 @@ class Match(models.Model):
         s += f"Score: {self.score_player_1}:{self.score_player_2}"
         return s
 
-    def hasPlayer(self, user):
-        return self.player_1 == user or self.player_2 == user
-
 
 class Tournament(models.Model):
     class State(Enum):
@@ -91,11 +88,18 @@ class Tournament(models.Model):
         return self.state == self.State.FINISHED.value
 
 
+class PlannedMatchQuerySet(MatchQuerySet):
+    def not_played(self):
+        return self.filter(actual_match=None)
+
+
 class PlannedMatch(models.Model):
     player_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="planned_match_player_1")
     player_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="planned_match_player_2")
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, related_name="planned_matches")
     actual_match = models.ForeignKey(Match, on_delete=models.SET_NULL, null=True, blank=True)
+
+    objects = PlannedMatchQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "planned_matches"
@@ -103,6 +107,3 @@ class PlannedMatch(models.Model):
     def __str__(self):
         s = f"PlannedMatch: {self.player_1}/{self.player_2}"
         return s
-
-    def hasPlayer(self, user):
-        return self.player_1 == user or self.player_2 == user

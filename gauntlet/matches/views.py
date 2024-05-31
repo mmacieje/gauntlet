@@ -240,12 +240,6 @@ class TournamentDetailView(SingleObjectMixin, View):
             if planned_match is not None and planned_match.actual_match is not None
         ]
 
-        self.matches_planned_for_user = [
-            planned_match
-            for planned_match in planned_matches
-            if (planned_match.hasPlayer(request.user) and planned_match.actual_match is None)
-        ]
-
         player_names = [self.get_user_name(user) for user in tournament.players.all()]
         self.scoreboard_df = pd.DataFrame("-", player_names, player_names)
         self.leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
@@ -266,7 +260,7 @@ class TournamentDetailView(SingleObjectMixin, View):
             self.template_name,
             {
                 "tournament": tournament,
-                "matches_planned_for_user": self.matches_planned_for_user,
+                "matches_planned_for_user": tournament.planned_matches.with_player(request.user).not_played(),
                 "scoreboard_html": scoreboard_html,
                 "leaderboard_html": leaderboard_html,
             },
