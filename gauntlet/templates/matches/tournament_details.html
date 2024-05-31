@@ -46,42 +46,6 @@
                 <div>Legend: [row]:[colum]</div>
             </div>
         {% endif %}
-        {% if played_matches %}
-            <h2>Matches played:</h2>
-            {% for match in played_matches %}
-                <div class="card my-2 row col-lg-6">
-                    <div class="card-body">
-                        <table class="table w-auto" id="matches_list">
-                        <thead="">
-                        <tr>
-                            <th class="col">{{ match.date }}</th>
-                            <th class="col">M</th>
-                            {% for score in match.round_scores %}
-                            <th class="col">R{{forloop.counter}}</th>
-                            {% endfor %}
-                        </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="col">{{ match.player_1 }}</td>
-                                <td class="col">{{ match.score_player_1 }}</td>
-                            {% for score in match.round_scores %}
-                                <td class="col">{{ score.0 }}</td>
-                            {% endfor %}
-                            </tr>
-                            <tr>
-                                <td class="col">{{ match.player_2 }}</td>
-                                <td class="col">{{ match.score_player_2 }}</td>
-                            {% for score in match.round_scores %}
-                                <td class="col">{{ score.1 }}</td>
-                            {% endfor %}
-                            </tr>
-                        </tbody>
-                        </table>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
     {% else %}
         <p>Number of signed up players: {{ tournament.players.count}}</p>
         {% if user in tournament.players.all %}

@@ -271,7 +271,6 @@ class TournamentDetailView(SingleObjectMixin, View):
             self.template_name,
             {
                 "tournament": tournament,
-                "played_matches": self.played_matches,
                 "matches_planned_for_user": self.matches_planned_for_user,
                 "scoreboard_html": scoreboard_html,
                 "leaderboard_html": leaderboard_html,
