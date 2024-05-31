@@ -228,7 +228,12 @@ class TournamentDetailView(SingleObjectMixin, View):
         return self.ongoing_or_finished_details(request)
 
     def planned_tournament_details(self, request):
-        return self.render_details(request)
+        tournament = self.get_object()
+        return shortcuts.render(
+            request,
+            self.template_name,
+            {"tournament": tournament},
+        )
 
     def ongoing_or_finished_details(self, request):
         tournament = self.get_object()
@@ -256,7 +261,22 @@ class TournamentDetailView(SingleObjectMixin, View):
             by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True]
         )
 
-        return self.render_details(request)
+        table_classes = "table table-striped table-bordered table-responsive"
+        table_classes_rotated_header = table_classes + " vrt-header"
+        scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
+        leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
+
+        return shortcuts.render(
+            request,
+            self.template_name,
+            {
+                "tournament": tournament,
+                "played_matches": self.played_matches,
+                "matches_planned_for_user": self.matches_planned_for_user,
+                "scoreboard_html": scoreboard_html,
+                "leaderboard_html": leaderboard_html,
+            },
+        )
 
     def update_leaderboard(self, match):
         name_1 = self.get_user_name(match.player_1)
@@ -284,32 +304,6 @@ class TournamentDetailView(SingleObjectMixin, View):
 
         self.scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
         self.scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
-
-    def render_details(self, request):
-        tournament = self.get_object()
-        if tournament.isInPlanning():
-            return shortcuts.render(
-                request,
-                self.template_name,
-                {"tournament": tournament},
-            )
-
-        table_classes = "table table-striped table-bordered table-responsive"
-        table_classes_rotated_header = table_classes + " vrt-header"
-        scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
-        leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
-
-        return shortcuts.render(
-            request,
-            self.template_name,
-            {
-                "tournament": tournament,
-                "played_matches": self.played_matches,
-                "matches_planned_for_user": self.matches_planned_for_user,
-                "scoreboard_html": scoreboard_html,
-                "leaderboard_html": leaderboard_html,
-            },
-        )
 
     # TODO just set the name of the user to the email sans domain and get rid of this helper
     def get_user_name(self, user):
