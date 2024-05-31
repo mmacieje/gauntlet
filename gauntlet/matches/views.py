@@ -1,5 +1,4 @@
 import django.shortcuts as shortcuts
-import plotly.express as px
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory
@@ -9,10 +8,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
-from plotly.graph_objs import Bar
-from plotly.offline import plot
 
-from .forms import MatchForm, RoundForm, StatsForm
+from .forms import MatchForm, RoundForm
 from .models import Match, PlannedMatch, Tournament
 
 User = get_user_model()
@@ -114,77 +111,6 @@ def _new(request, planned=None):
         rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
 
     return build_template_response(request, match_form, rounds_formset, planned)
-
-
-def calculate_results(matches, main_player):
-    match_count = len(matches)
-    if match_count == 0:
-        return None
-    results = {"match_count": match_count}
-
-    match_stats = {
-        "win_count": 0,
-        "loose_count": 0,
-        "draw_count": 0,
-    }
-    set_count = 0
-    set_score_distribution = {}
-    for i in list(range(-11, -1)) + list(range(2, 12)):
-        set_score_distribution[int(i)] = 0
-    for match in matches:
-        if match.score_player_1 == match.score_player_2:
-            match_stats["draw_count"] += 1
-        elif (match.player_1 == main_player and match.score_player_1 > match.score_player_2) or (
-            match.player_2 == main_player and match.score_player_2 > match.score_player_1
-        ):
-            match_stats["win_count"] += 1
-        else:
-            match_stats["loose_count"] += 1
-        if match.round_scores is None:
-            continue
-        for round_score in match.round_scores:
-            if match.player_1 == main_player:
-                difference = round_score[0] - round_score[1]
-            else:
-                difference = round_score[1] - round_score[0]
-            set_score_distribution[int(difference)] += 1
-            set_count += 1
-    normalized_distribution_keys = []
-    normalized_distribution_vals = []
-    for key, value in set_score_distribution.items():
-        normalized_distribution_keys.append(key)
-        normalized_distribution_vals.append(value / set_count * 100)
-    results["match_stats"] = match_stats
-    fig = Bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
-    fig = px.bar(x=normalized_distribution_keys, y=normalized_distribution_vals)
-    fig.update_xaxes(range=[-11, 11])
-    fig.update_layout(
-        xaxis=dict(
-            tickmode="array", tickvals=[-11, -8, -6, -4, -2, 2, 4, 6, 8, 11], title="Point difference in a sigle set"
-        ),
-        yaxis=dict(title="Percentage in all games"),
-    )
-    results["set_score_distribution_plot_div"] = plot(fig, output_type="div", include_plotlyjs=False)
-
-    return results
-
-
-@login_required
-def stats(request):
-    results = None
-    if request.method == "POST":
-        stats_form = StatsForm(request.POST, request.FILES)
-        if stats_form.is_valid():
-            matches = Match.objects.with_players(request.user, stats_form.cleaned_data["opponent"])
-        results = calculate_results(matches, request.user)
-    else:
-        stats_form = StatsForm()
-
-    return TemplateResponse(
-        request,
-        "matches/stats.html",
-        {"stats_form": stats_form, "results": results},
-    )
 
 
 @method_decorator(login_required, name="dispatch")

@@ -11,7 +11,7 @@ A platform for organising social sports events and tracking one's results.
 I love playing table tennis, and I mainly play it in the office with my colleagues. I wanted to keep our scores with something a little more elaborate than a spreadsheet, and so I created a simple web app. With it you can:
 - Register as a user an login in
 - Input a score of freeplay matches played with other users
-- See your previous matches and some basic stats (how many times you won/lost vs a certain player, what was the point distribution in sets)
+- See your previous matches
 - Organise a tournament and allow other players to sign up for it
 - Start the tournamnent which automatically schedules matches between the participants
 - The participants can enter scores for the planned matches, and see the progress (leaderboard, scoreboard)
