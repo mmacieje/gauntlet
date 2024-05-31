@@ -8,6 +8,19 @@ from django.utils import timezone
 User = get_user_model()
 
 
+class MatchQuerySet(models.QuerySet):
+    def with_player(self, player):
+        return self.filter(models.Q(player_1=player) | models.Q(player_2=player))
+
+    def without_player(self, player):
+        return self.filter(~models.Q(player_1=player) & ~models.Q(player_2=player))
+
+    def with_players(self, player_1, player_2):
+        return self.filter(
+            models.Q(player_1=player_1, player_2=player_2) | models.Q(player_1=player_2, player_2=player_1)
+        )
+
+
 class Match(models.Model):
     player_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match_player_1")
     player_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match_player_2")
@@ -15,6 +28,8 @@ class Match(models.Model):
     score_player_2 = models.PositiveSmallIntegerField(null=True)
     round_scores = models.JSONField(null=True)
     date = models.DateField(default=timezone.now)
+
+    objects = MatchQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "matches"

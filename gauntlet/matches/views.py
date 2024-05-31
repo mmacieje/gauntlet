@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.forms import formset_factory
 from django.http import Http404
 from django.template.response import TemplateResponse
@@ -20,16 +19,14 @@ from .models import Match, PlannedMatch, Tournament
 User = get_user_model()
 
 MAX_ROUNDS_PER_MATCH = 8
+MAX_OWN_MATCHES = 10
+MAX_OTHERS_MATCHES = 3
 
 
 @login_required
 def scores(request):
-    others_matches = Match.objects.filter(~Q(player_1=request.user) & ~Q(player_2=request.user)).order_by(
-        "-date", "-pk"
-    )[:3]
-    own_matches = Match.objects.filter(Q(player_1=request.user) | Q(player_2=request.user)).order_by("-date", "-pk")[
-        :30
-    ]
+    others_matches = Match.objects.without_player(request.user).order_by("-date", "-pk")[:MAX_OTHERS_MATCHES]
+    own_matches = Match.objects.with_player(request.user).order_by("-date", "-pk")[:MAX_OWN_MATCHES]
     matchsets = []
     matchsets.append({"name": "Last matches", "matches": others_matches})
     matchsets.append({"name": "Your matches", "matches": own_matches})
@@ -179,10 +176,7 @@ def stats(request):
     if request.method == "POST":
         stats_form = StatsForm(request.POST, request.FILES)
         if stats_form.is_valid():
-            matches = Match.objects.filter(
-                Q(player_1=request.user, player_2=stats_form.cleaned_data["opponent"])
-                | Q(player_1=stats_form.cleaned_data["opponent"], player_2=request.user)
-            )
+            matches = Match.objects.with_players(request.user, stats_form.cleaned_data["opponent"])
         results = calculate_results(matches, request.user)
 
     else:
