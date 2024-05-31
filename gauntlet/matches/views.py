@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import formset_factory
 from django.http import Http404
+from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
@@ -32,7 +33,7 @@ def scores(request):
     matchsets = []
     matchsets.append({"name": "Last matches", "matches": others_matches})
     matchsets.append({"name": "Your matches", "matches": own_matches})
-    return shortcuts.render(request, "matches/scores.html", {"matchsets": matchsets})
+    return TemplateResponse(request, "matches/scores.html", {"matchsets": matchsets})
 
 
 @login_required
@@ -52,7 +53,7 @@ def new_planned(request, id):
 @login_required
 def _new(request, planned=None):
     def render(request, match_form, rounds_formset, planned):
-        return shortcuts.render(
+        return TemplateResponse(
             request,
             "matches/new.html",
             {"match_form": match_form, "rounds_formset": rounds_formset, "planned": planned},
@@ -187,7 +188,7 @@ def stats(request):
     else:
         stats_form = StatsForm()
 
-    return shortcuts.render(
+    return TemplateResponse(
         request,
         "matches/stats.html",
         {"stats_form": stats_form, "results": results},
@@ -229,7 +230,7 @@ class TournamentDetailView(SingleObjectMixin, View):
 
     def planned_tournament_details(self, request):
         tournament = self.get_object()
-        return shortcuts.render(
+        return TemplateResponse(
             request,
             self.template_name,
             {"tournament": tournament},
@@ -266,7 +267,7 @@ class TournamentDetailView(SingleObjectMixin, View):
         scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
         leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
 
-        return shortcuts.render(
+        return TemplateResponse(
             request,
             self.template_name,
             {
