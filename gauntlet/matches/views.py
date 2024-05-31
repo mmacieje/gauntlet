@@ -48,14 +48,14 @@ def new_planned(request, id):
 
 @login_required
 def _new(request, planned=None):
-    def render(request, match_form, rounds_formset, planned):
+    def build_template_response(request, match_form, rounds_formset, planned):
         return TemplateResponse(
             request,
             "matches/new.html",
             {"match_form": match_form, "rounds_formset": rounds_formset, "planned": planned},
         )
 
-    def processScores(match_form, rounds_formset):
+    def process_scores(match_form, rounds_formset):
         round_scores = []
         score_player_1 = 0
         score_player_2 = 0
@@ -84,13 +84,13 @@ def _new(request, planned=None):
                 and not request.user.is_superuser
             ):
                 match_form.add_error(None, "You can only register matches you played in yourself")
-                return render(request, match_form, rounds_formset, planned)
+                return build_template_response(request, match_form, rounds_formset, planned)
             if planned is not None and (
                 match["player_1"] != planned.player_1 or match["player_2"] != planned.player_2
             ):
                 # TODO this is ugly, hide the form fields on frontend
                 match_form.add_error(None, "Please don't change players on a planned match")
-                return render(request, match_form, rounds_formset, planned)
+                return build_template_response(request, match_form, rounds_formset, planned)
             rounds_valid = True
             for i in range(match["round_count"]):
                 round = rounds_formset[i]
@@ -98,7 +98,7 @@ def _new(request, planned=None):
                     rounds_valid = False
                     break
             if rounds_valid:
-                scores = processScores(match_form, rounds_formset)
+                scores = process_scores(match_form, rounds_formset)
                 match = match_form.save(scores["score_player_1"], scores["score_player_2"], scores["round_scores"])
                 if planned is not None:
                     planned.actual_match = match
@@ -113,7 +113,7 @@ def _new(request, planned=None):
             match_form = MatchForm(prefix="match", user=request.user)
         rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
 
-    return render(request, match_form, rounds_formset, planned)
+    return build_template_response(request, match_form, rounds_formset, planned)
 
 
 def calculate_results(matches, main_player):
