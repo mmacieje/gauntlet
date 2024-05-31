@@ -1,5 +1,4 @@
 import django.shortcuts as shortcuts
-import pandas as pd
 import plotly.express as px
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -178,7 +177,6 @@ def stats(request):
         if stats_form.is_valid():
             matches = Match.objects.with_players(request.user, stats_form.cleaned_data["opponent"])
         results = calculate_results(matches, request.user)
-
     else:
         stats_form = StatsForm()
 
@@ -208,6 +206,7 @@ class TournamentDetailView(SingleObjectMixin, View):
             tournament.removePlayer(request.user)
         elif "sign_up" in request.POST and not user_in_tournament:
             tournament.addPlayer(request.user)
+        # TODO this should be done via Admin interface instead
         elif "start" in request.POST and request.user.is_superuser:
             tournament.start()
 
@@ -218,81 +217,27 @@ class TournamentDetailView(SingleObjectMixin, View):
 
     def details(self, request):
         tournament = self.get_object()
+
         if tournament.isInPlanning():
-            return self.planned_tournament_details(request)
-        return self.ongoing_or_finished_details(request)
+            return TemplateResponse(
+                request,
+                self.template_name,
+                {"tournament": tournament},
+            )
 
-    def planned_tournament_details(self, request):
-        tournament = self.get_object()
-        return TemplateResponse(
-            request,
-            self.template_name,
-            {"tournament": tournament},
-        )
-
-    def ongoing_or_finished_details(self, request):
-        tournament = self.get_object()
-        planned_matches = PlannedMatch.objects.filter(tournament=tournament)
-
-        self.played_matches = [
-            planned_match.actual_match
-            for planned_match in planned_matches
-            if planned_match is not None and planned_match.actual_match is not None
-        ]
-
-        player_names = [self.get_user_name(user) for user in tournament.players.all()]
-        self.scoreboard_df = pd.DataFrame("-", player_names, player_names)
-        self.leaderboard_df = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
-        for match in self.played_matches:
-            self.update_leaderboard(match)
-            self.update_scoreboard(match)
-        self.leaderboard_df.sort_values(
-            by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True]
-        )
-
+        scoreboard_df, leaderboard_df = tournament.get_boards()
         table_classes = "table table-striped table-bordered table-responsive"
         table_classes_rotated_header = table_classes + " vrt-header"
-        scoreboard_html = self.scoreboard_df.to_html(classes=table_classes_rotated_header)
-        leaderboard_html = self.leaderboard_df.to_html(classes=table_classes)
-
+        scoreboard_html = scoreboard_df.to_html(classes=table_classes_rotated_header)
+        leaderboard_html = leaderboard_df.to_html(classes=table_classes)
+        matches_planned_for_user = tournament.planned_matches.with_player(request.user).not_played()
         return TemplateResponse(
             request,
             self.template_name,
             {
                 "tournament": tournament,
-                "matches_planned_for_user": tournament.planned_matches.with_player(request.user).not_played(),
+                "matches_planned_for_user": matches_planned_for_user,
                 "scoreboard_html": scoreboard_html,
                 "leaderboard_html": leaderboard_html,
             },
         )
-
-    def update_leaderboard(self, match):
-        name_1 = self.get_user_name(match.player_1)
-        name_2 = self.get_user_name(match.player_2)
-        score_1 = match.score_player_1
-        score_2 = match.score_player_2
-
-        self.leaderboard_df.at[name_1, "Matches"] += 1
-        self.leaderboard_df.at[name_2, "Matches"] += 1
-        if score_1 > score_2:
-            self.leaderboard_df.at[name_1, "Wins"] += 1
-        elif score_2 > score_1:
-            self.leaderboard_df.at[name_2, "Wins"] += 1
-        for score in match.round_scores:
-            if score[0] < score[1]:
-                self.leaderboard_df.at[name_1, "Sets lost"] += 1
-            elif score[0] > score[1]:
-                self.leaderboard_df.at[name_2, "Sets lost"] += 1
-
-    def update_scoreboard(self, match):
-        name_1 = self.get_user_name(match.player_1)
-        name_2 = self.get_user_name(match.player_2)
-        score_1 = match.score_player_1
-        score_2 = match.score_player_2
-
-        self.scoreboard_df.at[name_2, name_1] = f"{score_2}:{score_1}"
-        self.scoreboard_df.at[name_1, name_2] = f"{score_1}:{score_2}"
-
-    # TODO just set the name of the user to the email sans domain and get rid of this helper
-    def get_user_name(self, user):
-        return user.email.split("@")[0]

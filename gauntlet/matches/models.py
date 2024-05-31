@@ -1,6 +1,7 @@
 import itertools
 from enum import Enum
 
+import pandas as pd
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
@@ -38,6 +39,11 @@ class Match(models.Model):
         s = f"Match: {self.player_1}/{self.player_2} "
         s += f"Score: {self.score_player_1}:{self.score_player_2}"
         return s
+
+
+# TODO just set the name of the user to the email sans domain and get rid of this helper
+def get_user_name(user):
+    return user.email.split("@")[0]
 
 
 class Tournament(models.Model):
@@ -78,6 +84,49 @@ class Tournament(models.Model):
         self.state = self.State.ONGOING.value
         self.save()
 
+    def get_boards(self):
+        played_matches = [p.actual_match for p in self.planned_matches.played()]
+        player_names = [get_user_name(user) for user in self.players.all()]
+
+        scoreboard = self.get_scoreboard(played_matches, player_names)
+        leaderboard = self.get_leaderboard(played_matches, player_names)
+        return scoreboard, leaderboard
+
+    def get_leaderboard(self, played_matches, player_names):
+        leaderboard = pd.DataFrame(0, player_names, ["Wins", "Matches", "Sets lost"])
+        for match in played_matches:
+            name_1 = get_user_name(match.player_1)
+            name_2 = get_user_name(match.player_2)
+            score_1 = match.score_player_1
+            score_2 = match.score_player_2
+
+            leaderboard.at[name_1, "Matches"] += 1
+            leaderboard.at[name_2, "Matches"] += 1
+            if score_1 > score_2:
+                leaderboard.at[name_1, "Wins"] += 1
+            elif score_2 > score_1:
+                leaderboard.at[name_2, "Wins"] += 1
+            for score in match.round_scores:
+                if score[0] < score[1]:
+                    leaderboard.at[name_1, "Sets lost"] += 1
+                elif score[0] > score[1]:
+                    leaderboard.at[name_2, "Sets lost"] += 1
+
+        leaderboard.sort_values(by=["Wins", "Matches", "Sets lost"], inplace=True, ascending=[False, True, True])
+        return leaderboard
+
+    def get_scoreboard(self, played_matches, player_names):
+        scoreboard = pd.DataFrame("-", player_names, player_names)
+        for match in played_matches:
+            name_1 = get_user_name(match.player_1)
+            name_2 = get_user_name(match.player_2)
+            score_1 = match.score_player_1
+            score_2 = match.score_player_2
+
+            scoreboard.at[name_2, name_1] = f"{score_2}:{score_1}"
+            scoreboard.at[name_1, name_2] = f"{score_1}:{score_2}"
+        return scoreboard
+
     def isInPlanning(self):
         return self.state == self.State.PLANNED.value
 
@@ -89,6 +138,9 @@ class Tournament(models.Model):
 
 
 class PlannedMatchQuerySet(MatchQuerySet):
+    def played(self):
+        return self.filter(~models.Q(actual_match=None))
+
     def not_played(self):
         return self.filter(actual_match=None)
 
