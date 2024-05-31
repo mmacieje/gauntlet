@@ -58,7 +58,7 @@ def _new(request, planned=None):
         score_player_2 = 0
         for i in range(match_form.clean()["round_count"]):
             data = rounds_formset[i].clean()
-            if data["player_1_is_the_winner"] == 1:
+            if data["player_1_is_the_winner"]:
                 score_player_1 += 1
                 round_score = [data["score_winner"], data["score_loser"]]
             else:
@@ -108,7 +108,7 @@ def _new(request, planned=None):
             match_form = MatchForm(prefix="match", planned=planned)
         else:
             match_form = MatchForm(prefix="match", user=request.user)
-        rounds_formset = RoundFormset(prefix="rounds", form_kwargs={"user": request.user})
+        rounds_formset = RoundFormset(prefix="rounds")
 
     return build_template_response(request, match_form, rounds_formset, planned)
 

@@ -91,20 +91,17 @@ class MatchForm(forms.Form):
 
 
 class RoundForm(forms.Form):
-    winner = forms.ModelChoiceField(queryset=player_queryset, label="Winner")
-    player_1_is_the_winner = forms.IntegerField(min_value=1, max_value=2)
+    player_1_is_the_winner = forms.BooleanField(required=False)
     score_winner = forms.IntegerField(min_value=0, max_value=100, label="Winner score")
     score_loser = forms.IntegerField(min_value=0, max_value=100, label="Loser score")
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.disable_csrf = True
         self.helper.layout = Layout(
             Field("player_1_is_the_winner", type="hidden"),
-            Field("winner", type="hidden"),
             Field("score_loser", required=True),
             Field("score_winner", required=False, readonly=True),
         )
@@ -113,9 +110,7 @@ class RoundForm(forms.Form):
         self.helper.field_class = "col-9"
         self.initial["score_winner"] = MIN_ROUND_SCORE
         self.initial["score_loser"] = 0
-        self.initial["player_1_is_the_winner"] = 2
-        if user:
-            self.initial["winner"] = user
+        self.initial["player_1_is_the_winner"] = "true"
 
     def clean(self):
         errors = []
@@ -127,7 +122,7 @@ class RoundForm(forms.Form):
             errors.append("Scores cannot bo lower than 0")
 
         if score_loser > (score_winner - 2):
-            errors.append("Winner must score at least 2 points more than the loser")
+            errors.append("The winner must score at least 2 points more than the loser")
 
         if score_winner < MIN_ROUND_SCORE:
             errors.append(f"The winner must score at least {MIN_ROUND_SCORE} points")
