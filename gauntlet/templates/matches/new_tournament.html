@@ -1,0 +1,15 @@
+{% extends 'matches/new_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block match_headline %}
+    <h2>Tournament Match - {{ planned_match.tournament.name }}</h2>
+{% endblock %}
+
+{% block players %}
+    <div id="div_id_opponent" class="mb-3 row">
+        <label for="id_opponent" class="col-form-label col-sm-4 col-lg-2 requiredField">
+            Opponent
+        </label>
+        <div class="col-sm-8 col-lg-4">{{opponent}}</div>
+    </div>
+{% endblock %}

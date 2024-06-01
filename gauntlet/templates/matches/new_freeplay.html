@@ -1,0 +1,10 @@
+{% extends 'matches/new_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block match_headline %}
+    <h2>Freeplay Match</h2>
+{% endblock %}
+
+{% block players %}
+    {% crispy opponent_form %}
+{% endblock %}

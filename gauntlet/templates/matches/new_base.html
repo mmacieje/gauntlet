@@ -4,28 +4,30 @@
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" media="all">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    {% if planned %}
-    <h2>Tournament Match - {{ planned.tournament.name }}</h2>
-    {% else %}
-    <h2>New Match - Freeplay</h2>
-    {% endif %}
+    {% block match_headline %}
+    {% endblock %}
     <form method="post">
         {% csrf_token %}
-        {% crispy match_form %}
+        {% crispy date_form %}
+        {% block players %}
+        {% endblock %}
+        {% crispy round_count_form %}
         <h4>Round scores:</h4>
         {{ rounds_formset.management_form|crispy }}
         {% for form in rounds_formset %}
         <div class="border border-secondary rounded p-3 my-3 col-lg-6 col-12" id="div_outer_round_formset_{{ forloop.counter0 }}">
-            <div id="div_id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button" class="mb-3 row">
-                <label for="id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button" class="col-form-label col-3">
+            <div id="div_id_rounds-{{ forloop.counter0 }}-player_1_won_button" class="mb-3 row">
+                <label for="id_rounds-{{ forloop.counter0 }}-player_1_won_button" class="col-form-label col-3">
                     You
                 </label>
                 <div class="col-9">
-                    <button type="button" class="btn w-100 active text-start" id="id_rounds-{{ forloop.counter0 }}-player_1_is_the_winner_button">WON</button>
+                    <button type="button" class="btn w-100 active text-start" id="id_rounds-{{ forloop.counter0 }}-player_1_won_button">WON</button>
                 </div>
             </div>
             {% crispy form %}
-        </div>
+            <div id="div_id_rounds-{{ forloop.counter0 }}-score_winner" class="mb-3 row"> <label for="id_rounds-{{ forloop.counter0 }}-score_winner" class="col-form-label col-3 requiredField">
+                Winner score </label> <div class="col-9"> <input type="number" name="rounds-{{ forloop.counter0 }}-score_winner" value="11" min="0" max="100" required="False" readonly="True" class="numberinput form-control" id="id_rounds-{{ forloop.counter0 }}-score_winner"> </div> </div>
+            </div>
         {% endfor %}
         <input type="submit" value="Submit" class="mb-3">
     </form>
@@ -35,7 +37,7 @@
 
         // Hides surplus round sub-forms
         function roundsCallback() {
-            var rounds = document.getElementById("id_match-round_count").value;
+            var rounds = document.getElementById("id_round_count").value;
             for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
                 enabled = i+1 <= rounds
                 document.getElementById("id_rounds-" + i + "-score_loser").required = enabled ? true : false;
@@ -73,11 +75,11 @@
         }
 
         function initForm() {
-            document.getElementById("id_match-round_count").addEventListener("change", roundsCallback);
+            document.getElementById("id_round_count").addEventListener("change", roundsCallback);
             for (let i = 0; i < MAX_ROUNDS_PER_MATCH; i++) {
                 document.getElementById("id_rounds-" + i + "-score_loser").addEventListener("change", roundScoreCallback);
-                winner_button = document.getElementById("id_rounds-" + i + "-player_1_is_the_winner_button")
-                winner_input = document.getElementById("id_rounds-" + i + "-player_1_is_the_winner")
+                winner_button = document.getElementById("id_rounds-" + i + "-player_1_won_button")
+                winner_input = document.getElementById("id_rounds-" + i + "-player_1_won")
                 winner_button.addEventListener("click", winnerButtonCallback);
                 // We cannot rely on the inital value always being "WON" since the form might
                 // have been POSTed and then returned to the user following a failed validation.

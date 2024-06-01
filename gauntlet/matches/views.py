@@ -1,7 +1,6 @@
 import django.shortcuts as shortcuts
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.forms import formset_factory
 from django.http import Http404
 from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
@@ -9,7 +8,7 @@ from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
 
-from .forms import MatchForm, RoundForm
+from .forms import DateForm, OpponentForm, RoundCountForm, RoundForm
 from .models import Match, PlannedMatch, Tournament
 
 User = get_user_model()
@@ -20,7 +19,7 @@ MAX_OTHERS_MATCHES = 3
 
 
 @login_required
-def scores(request):
+def show_scores(request):
     others_matches = Match.objects.without_player(request.user).order_by("-date", "-pk")[:MAX_OTHERS_MATCHES]
     own_matches = Match.objects.with_player(request.user).order_by("-date", "-pk")[:MAX_OWN_MATCHES]
     matchsets = []
@@ -30,87 +29,95 @@ def scores(request):
 
 
 @login_required
-def new(request):
-    return _new(request)
+def new_freeplay(request):
+    if request.method == "POST":
+        date_form = DateForm(request.POST, request.FILES)
+        opponent_form = OpponentForm(request.POST, request.FILES, user=request.user)
+        round_count_form = RoundCountForm(request.POST, request.FILES)
+        rounds_formset = RoundForm.get_formset_factory()(request.POST, request.FILES, prefix="rounds")
+        if (
+            date_form.is_valid()
+            and opponent_form.is_valid()
+            and round_count_form.is_valid()
+            and rounds_formset.is_valid()
+        ):
+            round_count = round_count_form.cleaned_data["round_count"]
+            scores = rounds_formset.get_scores(round_count)
+            match = Match(
+                date=date_form.cleaned_data["date"],
+                player_1=request.user,
+                player_2=opponent_form.cleaned_data["opponent"],
+                score_player_1=scores["player_1"],
+                score_player_2=scores["player_2"],
+                round_scores=scores["rounds"],
+            )
+            match.save()
+            return shortcuts.redirect("matches:show_scores")
+    else:
+        date_form = DateForm()
+        opponent_form = OpponentForm(user=request.user)
+        round_count_form = RoundCountForm()
+        rounds_formset = RoundForm.get_formset_factory()(prefix="rounds")
+
+    return TemplateResponse(
+        request,
+        "matches/new_freeplay.html",
+        {
+            "date_form": date_form,
+            "opponent_form": opponent_form,
+            "round_count_form": round_count_form,
+            "rounds_formset": rounds_formset,
+        },
+    )
 
 
 @login_required
 def new_planned(request, id):
-    planned = shortcuts.get_object_or_404(PlannedMatch, id=id)
-    if planned.actual_match is not None:
+    planned_match = shortcuts.get_object_or_404(PlannedMatch, id=id)
+    if planned_match.actual_match is not None:
         # This planned match already has an outcome
         raise Http404
-    return _new(request, planned)
 
-
-@login_required
-def _new(request, planned=None):
-    def build_template_response(request, match_form, rounds_formset, planned):
-        return TemplateResponse(
-            request,
-            "matches/new.html",
-            {"match_form": match_form, "rounds_formset": rounds_formset, "planned": planned},
-        )
-
-    def process_scores(match_form, rounds_formset):
-        round_scores = []
-        score_player_1 = 0
-        score_player_2 = 0
-        for i in range(match_form.clean()["round_count"]):
-            data = rounds_formset[i].clean()
-            if data["player_1_is_the_winner"]:
-                score_player_1 += 1
-                round_score = [data["score_winner"], data["score_loser"]]
-            else:
-                score_player_2 += 1
-                round_score = [data["score_loser"], data["score_winner"]]
-            round_scores.append(round_score)
-        return {"round_scores": round_scores, "score_player_1": score_player_1, "score_player_2": score_player_2}
-
-    RoundFormset = formset_factory(RoundForm, extra=MAX_ROUNDS_PER_MATCH)
     if request.method == "POST":
-        match_form = MatchForm(request.POST, request.FILES, prefix="match")
-        rounds_formset = RoundFormset(request.POST, request.FILES, prefix="rounds")
-
-        if match_form.is_valid():
-            match = match_form.clean()
-            if (
-                planned is None
-                and match["player_1"] != request.user
-                and match["player_2"] != request.user
-                and not request.user.is_superuser
-            ):
-                match_form.add_error(None, "You can only register matches you played in yourself")
-                return build_template_response(request, match_form, rounds_formset, planned)
-            if planned is not None and (
-                match["player_1"] != planned.player_1 or match["player_2"] != planned.player_2
-            ):
-                # TODO this is ugly, hide the form fields on frontend
-                match_form.add_error(None, "Please don't change players on a planned match")
-                return build_template_response(request, match_form, rounds_formset, planned)
-            rounds_valid = True
-            for i in range(match["round_count"]):
-                round = rounds_formset[i]
-                if not round.is_valid():
-                    rounds_valid = False
-                    break
-            if rounds_valid:
-                scores = process_scores(match_form, rounds_formset)
-                match = match_form.save(scores["score_player_1"], scores["score_player_2"], scores["round_scores"])
-                if planned is not None:
-                    planned.actual_match = match
-                    planned.save()
-                    return shortcuts.redirect("matches:tournament-detail", pk=planned.tournament.pk)
-                else:
-                    return shortcuts.redirect("matches:scores")
+        date_form = DateForm(request.POST, request.FILES)
+        round_count_form = RoundCountForm(request.POST, request.FILES)
+        rounds_formset = RoundForm.get_formset_factory()(request.POST, request.FILES, prefix="rounds")
+        if date_form.is_valid() and round_count_form.is_valid() and rounds_formset.is_valid():
+            round_count = round_count_form.cleaned_data["round_count"]
+            scores = rounds_formset.get_scores(round_count, reverse=(request.user == planned_match.player_2))
+            match = Match(
+                date=date_form.cleaned_data["date"],
+                player_1=planned_match.player_1,
+                player_2=planned_match.player_2,
+                score_player_1=scores["player_1"],
+                score_player_2=scores["player_2"],
+                round_scores=scores["rounds"],
+            )
+            match.save()
+            planned_match.actual_match = match
+            planned_match.save()
+            return shortcuts.redirect("matches:tournament-detail", pk=planned_match.tournament.pk)
     else:
-        if planned is not None:
-            match_form = MatchForm(prefix="match", planned=planned)
-        else:
-            match_form = MatchForm(prefix="match", user=request.user)
-        rounds_formset = RoundFormset(prefix="rounds")
+        date_form = DateForm()
+        round_count_form = RoundCountForm()
+        rounds_formset = RoundForm.get_formset_factory()(prefix="rounds")
 
-    return build_template_response(request, match_form, rounds_formset, planned)
+    if request.user == planned_match.player_1:
+        opponent = planned_match.player_2
+    else:
+        opponent = planned_match.player_1
+
+    return TemplateResponse(
+        request,
+        "matches/new_tournament.html",
+        {
+            "date_form": date_form,
+            "round_count_form": round_count_form,
+            "rounds_formset": rounds_formset,
+            "planned_match": planned_match,
+            "opponent": opponent,
+        },
+    )
 
 
 @method_decorator(login_required, name="dispatch")
@@ -152,6 +159,7 @@ class TournamentDetailView(SingleObjectMixin, View):
             )
 
         scoreboard_df, leaderboard_df = tournament.get_boards()
+        # TODO move styling out of backend code
         table_classes = "table table-striped table-bordered table-responsive"
         table_classes_rotated_header = table_classes + " vrt-header"
         scoreboard_html = scoreboard_df.to_html(classes=table_classes_rotated_header)
