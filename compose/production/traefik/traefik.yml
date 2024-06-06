@@ -28,7 +28,7 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      rule: 'Host(`demo.gauntlet.pl`) || Host(`www.demo.gauntlet.pl`)'
+      rule: 'Host(`demo.gauntlet.pl`) || Host(`www.demo.gauntlet.pl`) || Host(`gauntlet.pl`) || Host(`www.gauntlet.pl`)'
       entryPoints:
         - web-secure
       middlewares:
@@ -39,7 +39,7 @@ http:
         certResolver: letsencrypt
 
     web-media-router:
-      rule: '(Host(`demo.gauntlet.pl`) || Host(`www.demo.gauntlet.pl`)) && PathPrefix(`/media/`)'
+      rule: '(Host(`demo.gauntlet.pl`) || Host(`www.demo.gauntlet.pl`) || Host(`gauntlet.pl`) || Host(`www.gauntlet.pl`)) && PathPrefix(`/media/`)'
       entryPoints:
         - web-secure
       middlewares:
