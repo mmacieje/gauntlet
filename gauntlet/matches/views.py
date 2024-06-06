@@ -41,17 +41,6 @@ def new_freeplay(request):
             and round_count_form.is_valid()
             and rounds_formset.is_valid()
         ):
-            round_count = round_count_form.cleaned_data["round_count"]
-            scores = rounds_formset.get_scores(round_count)
-            match = Match(
-                date=date_form.cleaned_data["date"],
-                player_1=request.user,
-                player_2=opponent_form.cleaned_data["opponent"],
-                score_player_1=scores["player_1"],
-                score_player_2=scores["player_2"],
-                round_scores=scores["rounds"],
-            )
-            match.save()
             return shortcuts.redirect("matches:show_scores")
     else:
         date_form = DateForm()
@@ -83,19 +72,6 @@ def new_planned(request, id):
         round_count_form = RoundCountForm(request.POST, request.FILES)
         rounds_formset = RoundForm.get_formset_factory()(request.POST, request.FILES, prefix="rounds")
         if date_form.is_valid() and round_count_form.is_valid() and rounds_formset.is_valid():
-            round_count = round_count_form.cleaned_data["round_count"]
-            scores = rounds_formset.get_scores(round_count, reverse=(request.user == planned_match.player_2))
-            match = Match(
-                date=date_form.cleaned_data["date"],
-                player_1=planned_match.player_1,
-                player_2=planned_match.player_2,
-                score_player_1=scores["player_1"],
-                score_player_2=scores["player_2"],
-                round_scores=scores["rounds"],
-            )
-            match.save()
-            planned_match.actual_match = match
-            planned_match.save()
             return shortcuts.redirect("matches:tournament-detail", pk=planned_match.tournament.pk)
     else:
         date_form = DateForm()
@@ -136,9 +112,13 @@ class TournamentDetailView(SingleObjectMixin, View):
         user_in_tournament = request.user in tournament.players.all()
 
         if "withdraw" in request.POST and user_in_tournament:
-            tournament.removePlayer(request.user)
+            # demo - make no changes
+            # tournament.removePlayer(request.user)
+            pass
         elif "sign_up" in request.POST and not user_in_tournament:
-            tournament.addPlayer(request.user)
+            # demo - make no changes
+            # tournament.addPlayer(request.user)
+            pass
         # TODO this should be done via Admin interface instead
         elif "start" in request.POST and request.user.is_superuser:
             tournament.start()
