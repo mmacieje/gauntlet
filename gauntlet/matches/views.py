@@ -1,4 +1,5 @@
 import django.shortcuts as shortcuts
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -41,6 +42,11 @@ def new_freeplay(request):
             and round_count_form.is_valid()
             and rounds_formset.is_valid()
         ):
+            messages.add_message(
+                request,
+                messages.INFO,
+                "You entered valid data, but the match was not saved since this is a read-only demo.",
+            )
             return shortcuts.redirect("matches:show_scores")
     else:
         date_form = DateForm()
@@ -72,6 +78,11 @@ def new_planned(request, id):
         round_count_form = RoundCountForm(request.POST, request.FILES)
         rounds_formset = RoundForm.get_formset_factory()(request.POST, request.FILES, prefix="rounds")
         if date_form.is_valid() and round_count_form.is_valid() and rounds_formset.is_valid():
+            messages.add_message(
+                request,
+                messages.INFO,
+                "You entered valid data, but the match was not saved since this is a read-only demo.",
+            )
             return shortcuts.redirect("matches:tournament-detail", pk=planned_match.tournament.pk)
     else:
         date_form = DateForm()
@@ -114,10 +125,16 @@ class TournamentDetailView(SingleObjectMixin, View):
         if "withdraw" in request.POST and user_in_tournament:
             # demo - make no changes
             # tournament.removePlayer(request.user)
+            messages.add_message(
+                request, messages.INFO, "You cannot withdraw from this tournament since this is a read-only demo."
+            )
             pass
         elif "sign_up" in request.POST and not user_in_tournament:
             # demo - make no changes
             # tournament.addPlayer(request.user)
+            messages.add_message(
+                request, messages.INFO, "You cannot sign up for this tournament since this is a read-only demo."
+            )
             pass
         # TODO this should be done via Admin interface instead
         elif "start" in request.POST and request.user.is_superuser:
