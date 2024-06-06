@@ -1,6 +1,3 @@
-stages:
-  - deploy-demo
-
 deploy-demo:
   stage: deploy
   script:
