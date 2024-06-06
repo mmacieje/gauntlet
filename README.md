@@ -5,29 +5,23 @@
 </picture>
 
 # Gauntlet
-A platform for organising social sports events and tracking one's results.
-
-# Use case
 I love playing table tennis, and I mainly play it in the office with my colleagues. I wanted to keep our scores with something a little more elaborate than a spreadsheet, and so I created a simple web app. With it you can:
 - Register as a user an login in
-- Input a score of freeplay matches played with other users
-- See your previous matches
-- Organise a tournament and allow other players to sign up for it
-- Start the tournamnent which automatically schedules matches between the participants
-- The participants can enter scores for the planned matches, and see the progress (leaderboard, scoreboard)
+- Input match scores and see a history of played matches
+- Organise a tournament:
+  - Player can sign up for an upcomming tournament
+  - Once the tournament starts, matches are planned for each player
+  - Players can then input scores for the planned matches
+  - There is a leaderboard an a scoreboard available for an ongoing tournament
+  - All-on-all tournaments supported as of now, elimination tournaments to be done
 
 # Tech stack
 The app is written in Python with Django as the web framework. Frontend is created via Django Templates with Bootstrap and some JS sprinkled in. The app is Dockerized and uses Sendgrid to send out e-mail (e.g. to confirm user's e-mail account when signing up).
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 
-# To be done
-- Support other popular office activities e.g. Foosball
-- Support double (2x2) games and tournaments
-- Make a nicer frontend (e.g. React)
-
-# Name
-To "throw down the gauntlet" means to invite someone to compete with you.
+# Demo
+See the project in action at [demo.gauntlet.pl](https://demo.gauntlet.pl/)
 
 ## Author
 [Marcin Maciejewski](https://github.com/mmacieje/)
