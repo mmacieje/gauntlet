@@ -1,0 +1,11 @@
+stages:
+  - deploy-demo
+
+deploy-demo:
+  stage: deploy
+  script:
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > /home/ec2-user/gauntlet_demo_key.pem
+    - chmod 600 /home/ec2-user/gauntlet_demo_key.pem
+    - ssh -t -o StrictHostKeyChecking=no -i /home/ec2-user/gauntlet_demo_key.pem ec2-user@$DEPLOY_SERVER_IP 'cd /home/ec2-user/gauntlet && docker-compose -f production.yml down && git pull && docker-compose -f production.yml build && docker-compose -f production.yml up -d'
+  only:
+    - demo
